@@ -1530,8 +1530,8 @@ async function cancelModelCard(ctx: CommandContext): Promise<void> {
 
 /** Direct-text model switch — kept from f0.1 for `/model <name>` typing. */
 async function setModelDirect(value: string, ctx: CommandContext): Promise<void> {
-  if (!/^[\w.:-]{1,120}$/.test(value)) {
-    await reply(ctx, '❌ 模型名只能包含字母/数字/`.:-_`,长度 ≤ 120。');
+  if (!/^[\w.:@/-]{1,120}$/.test(value)) {
+    await reply(ctx, '❌ 模型名只能包含字母/数字/`.:-_@/`,长度 ≤ 120。');
     return;
   }
 

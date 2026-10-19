@@ -70,7 +70,9 @@ export function normalizeModelSelection(
   // catalog (`Gemini-3.8-Flash`, `claude-opus-4-6-thinking`, …). Any
   // non-default stored value passes through; only the /config form picker
   // (which needs exact option-value matches for select_static) clamps.
-  if (/^[\w.:-]{1,120}$/.test(value)) return value;
+  // `/` and `@` are allowed: gateway ids look like `cu/claude-opus-5-5` or
+  // `model@version`, and rejecting them silently fell back to default.
+  if (/^[\w.:@/-]{1,120}$/.test(value)) return value;
   return supportedModels(agentKind).some((m) => m.value === value)
     ? (value as string)
     : DEFAULT_MODEL;
