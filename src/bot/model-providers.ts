@@ -79,6 +79,39 @@ export function providerChoices(
   return [{ id: DEFAULT_PROVIDER, label: defaultName?.trim() || '默认' }, ...extras];
 }
 
+export interface ProviderModelChoice {
+  id: string;
+  name: string;
+  /** Dropdown text: `<model> · <provider label>`. */
+  label: string;
+  provider: string;
+}
+
+/**
+ * Union of every provider's static `models` list, each entry tagged with the
+ * provider it belongs to. When non-empty, the /model card lists these in a
+ * single Model dropdown and the provider is derived from the chosen model —
+ * the card's Provider select has no change callback, so picking a provider
+ * never re-rendered the Model list and the submit could pair the new
+ * provider with a model it does not serve. First provider wins on duplicates.
+ */
+export function unionProviderModels(
+  providers: NonNullable<ProfileConfig['modelProviders']>,
+): ProviderModelChoice[] {
+  const out: ProviderModelChoice[] = [];
+  const seen = new Set<string>();
+  for (const [id, def] of Object.entries(providers)) {
+    if (!def || !Array.isArray(def.models)) continue;
+    const tag = (def.label || id).replace(/[（(].*$/, '').trim() || id;
+    for (const m of def.models) {
+      if (typeof m !== 'string' || !m || seen.has(m)) continue;
+      seen.add(m);
+      out.push({ id: m, name: m, label: `${m} · ${tag}`, provider: id });
+    }
+  }
+  return out.slice(0, MAX_PROVIDER_MODELS * 2);
+}
+
 /** True when the config declares at least one extra provider. */
 export function hasExtraProviders(providers: NonNullable<ProfileConfig['modelProviders']>): boolean {
   return Object.keys(providers).length > 0;
