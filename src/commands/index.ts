@@ -1434,7 +1434,7 @@ async function showModelCard(ctx: CommandContext): Promise<void> {
 }
 
 async function submitModelCard(ctx: CommandContext): Promise<void> {
-  const fv = ctx.formValue ?? {};
+  let fv = ctx.formValue ?? {};
   const cfg = ctx.controls.cfg;
   const providers = ctx.controls.profileConfig.modelProviders ?? {};
   const submittedProvider = normalizeProvider(providers, String(fv.provider ?? '') || undefined);
@@ -1458,6 +1458,13 @@ async function submitModelCard(ctx: CommandContext): Promise<void> {
       return { combos: c.combos, source: c.source };
     });
     combos = cat.models.map((name) => ({ name }));
+  }
+  // Map the dropdown sentinel before validation: the form submits
+  // __default__ for the default choice, which is not in the provider-id
+  // whitelist below — validating first silently dropped the selection and
+  // kept the previous provider (2026-10-19 /model provider-switch bug).
+  if (String(fv.provider ?? '').trim() === DEFAULT_PROVIDER_VALUE) {
+    fv = { ...fv, provider: DEFAULT_PROVIDER };
   }
   const parsed = parseModelCardSubmit(
     fv,
