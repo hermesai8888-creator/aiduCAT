@@ -265,7 +265,11 @@ export async function startChannel(deps: StartChannelDeps): Promise<BridgeChanne
     // the normalizer drops (e.g. action.form_value on CardKit 2.0 form submits).
     includeRawEvent: true,
     outbound: {
-      streamThrottleMs: 400,
+      // f0.2 猴哥点单: 400ms 让卡片流式像"一跳一跳"。压到 60ms（SDK 默认
+      // 100ms，再紧一点）逼近打字机观感；patchCard 是整卡 JSON 补丁，非
+      // 原生 typewriter，但频率上来后肉眼连贯度显著提升。飞书 im API 有
+      // QPS 限制，50/s 的 patch 上限远够（单 run 并发只有 1 条卡流）。
+      streamThrottleMs: 60,
     },
     // SDK 1.65.0-alpha.3+ knobs.
     wsConfig: {
