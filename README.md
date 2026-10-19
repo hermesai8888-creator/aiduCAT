@@ -151,6 +151,16 @@ Cloud-doc comments are document-scoped: 云文档评论按文档权限生效（d
 
 这套 **lark-cli 身份策略**是按 profile 隔离的，不是全局的。
 
+
+### 模型 logo（面板头图标）
+
+面板头会显示模型厂商图标（OpenAI/Claude/Gemini 等 29 家）。飞书卡片 `custom_icon` 只认**本租户**上传图片的 `img_key`，外部 URL 会被飞书拒绝，因此仓库里的 `assets/lark-logo-keys.json` 只对上传过它们的那套飞书环境有效——**外部部署者需要自行上传一次并替换 key**：
+
+1. 准备 29 张 128px 厂商 PNG（图标源：[lobehub icons-static-png](https://github.com/lobehub/lobe-icons)，建议 1.97.x）。命名对齐 `src/card/model-logo.ts` 里的 `VendorLogo` 枚举（`openai.png`、`claude.png`…）。
+2. 用你的飞书应用凭证逐张调 `POST /open-apis/im/v1/images`（`image_type=message`）拿到 `img_key`。可用任意脚本/Postman 循环上传。
+3. 把得到的 29 个 key 写成 JSON 覆盖 `assets/lark-logo-keys.json`（键名=VendorLogo 枚举值），重新 `pnpm build`。
+4. 没有上传时功能自动降级：面板头不显示图标，不影响任何主功能。
+
 ### 工作目录与工作区
 
 每个 profile 可通过 `workspaces.default` 定义默认工作目录。`/cd` 切换当前目录并重置会话；`/ws` 保存并复用命名工作区（`/ws list`、`/ws save <name>`、`/ws use <name>`、`/ws remove <name>`）。工作目录只是 agent 的当前目录，不是文件系统沙箱 —— 实际文件访问仍取决于本地 agent 进程及其权限模式。

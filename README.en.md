@@ -148,6 +148,16 @@ Each profile uses a profile-local lark-cli directory at `~/.lark-channel/profile
 
 This **lark-cli identity policy** is per profile, not global.
 
+
+### Model logos (panel header icon)
+
+The panel header shows a vendor icon (OpenAI/Claude/Gemini, 29 vendors). Feishu cards reject external image URLs for `custom_icon` — they only render `img_key` values from images uploaded **to your own tenant** via `POST /open-apis/im/v1/images`. The shipped `assets/lark-logo-keys.json` is only valid for the tenant that uploaded them. For your own deployment:
+
+1. Prepare 29 vendor PNGs at 128px (icons: [lobehub icons-static-png](https://github.com/lobehub/lobe-icons), ~1.97.x), named after the `VendorLogo` union in `src/card/model-logo.ts` (`openai.png`, `claude.png`, ...).
+2. Upload each via the im/v1/images API with your app credentials and collect the returned `img_key`s.
+3. Overwrite `assets/lark-logo-keys.json` with your key map and rebuild (`pnpm build`).
+4. Without an upload the feature degrades gracefully: the header simply renders without an icon; no core functionality is affected.
+
 ### Working directories
 
 Each profile may define a default workspace through `workspaces.default`. `/cd` switches the current directory and resets the session; `/ws` saves and reuses named workspaces (`/ws list`, `/ws save <name>`, `/ws use <name>`, `/ws remove <name>`). The directory is the agent's current working directory, not a filesystem sandbox — file access still depends on the local agent process and its permission mode.
