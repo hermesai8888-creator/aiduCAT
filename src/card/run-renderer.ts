@@ -253,9 +253,10 @@ function metaHeader(state: RunState, options: RunCardRenderOptions, statusWord =
   // leftward every time the word appears or changes.
   if (statusWord) line2.push(statusWord);
 
-  // 猴哥点单 f0.2: single-line header — model/effort/ctx line and the
-  // status+counters line merged with the ' · ' separator.
-  return [line1.join(' · '), line2.join(' · ')].filter(Boolean).join(' · ');
+  // 猴哥点单 f0.2 终版: 回归两行分布 —
+  //   line 1: model · effort · context
+  //   line 2: 💭 n · 🛠️ n · ⏱️ ns · 状态词（运行时殿后，结束消失）
+  return [line1.join(' · '), line2.join(' · ')].filter(Boolean).join('\n');
 }
 
 /**

@@ -274,7 +274,8 @@ exports[`run card renderer snapshots > renders done, error, interrupted, and idl
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "❌ · 💭 0 · 🛠️ 0",
+            "content": "❌
+💭 0 · 🛠️ 0",
             "tag": "markdown",
             "text_size": "notation",
           },

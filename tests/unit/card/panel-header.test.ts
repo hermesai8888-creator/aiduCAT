@@ -21,8 +21,8 @@ function stateWithUsage(overrides: Partial<RunState> = {}): RunState {
   return { ...state, ...overrides };
 }
 
-describe('single-line panel header (猴哥点单 f0.2)', () => {
-  it('model · effort · ctx · counters · status word, all on one line', () => {
+describe('two-line panel header (猴哥点单 f0.2 终版)', () => {
+  it('line1 = model·effort·ctx, line2 = counters + status word', () => {
     const state = stateWithUsage();
     const card = renderCard(state, {
       model: 'Gemini-3.8-Flash',
@@ -31,14 +31,14 @@ describe('single-line panel header (猴哥点单 f0.2)', () => {
       startedAt: Date.now() - 5_000,
     });
     expect(panelTitle(card)).toBe(
-      'Gemini-3.8-Flash · Max · 25k/1M (2%) · 💭 0 · 🛠️ 0 · ⏱️ 5s · 💭Reasoning...',
+      'Gemini-3.8-Flash · Max · 25k/1M (2%)\n💭 0 · 🛠️ 0 · ⏱️ 5s · 💭Reasoning...',
     );
   });
 
   it('omits ctx% when contextWindow unknown, omits effort when unset', () => {
     const state = stateWithUsage();
     const card = renderCard(state, { model: 'SomeModel' });
-    expect(panelTitle(card)).toBe('SomeModel · 25k/1M (3%) · 💭 0 · 🛠️ 0 · 💭Reasoning...');
+    expect(panelTitle(card)).toBe('SomeModel · 25k/1M (3%)\n💭 0 · 🛠️ 0 · 💭Reasoning...');
   });
 
   it('omits the whole ctx piece until usage arrives', () => {
@@ -47,7 +47,7 @@ describe('single-line panel header (猴哥点单 f0.2)', () => {
       effort: 'high',
       contextWindow: 1_000_000,
     });
-    expect(panelTitle(card)).toBe('GLM-5.3-Flash · High · 💭 0 · 🛠️ 0 · 💭Reasoning...');
+    expect(panelTitle(card)).toBe('GLM-5.3-Flash · High\n💭 0 · 🛠️ 0 · 💭Reasoning...');
   });
 
   it('formats used/total with k/M units and percentage', () => {
@@ -89,9 +89,10 @@ describe('single-line panel header (猴哥点单 f0.2)', () => {
     expect(panelTitle(card)).toContain('25.5k/1M (3%)');
   });
 
-  it('zero counts still render, status word trailing', () => {
+  it('zero counts still render, status word trailing line 2', () => {
     const card = renderCard(initialState, { model: 'M', startedAt: Date.now() - 1000 });
-    expect(panelTitle(card)).toBe('M · 💭 0 · 🛠️ 0 · ⏱️ 1s · 💭Reasoning...');
+    const [, bottom] = panelTitle(card).split('\n');
+    expect(bottom).toBe('💭 0 · 🛠️ 0 · ⏱️ 1s · 💭Reasoning...');
   });
 
   it('status word disappears on completion; counters stay', () => {
@@ -104,10 +105,10 @@ describe('single-line panel header (猴哥点单 f0.2)', () => {
       contextWindow: 1_000_000,
       startedAt: Date.now() - 2000,
     });
-    const title = panelTitle(card);
-    expect(title).toContain('💭 1');
-    expect(title).toContain('🛠️ 1');
-    expect(title).toContain('⏱️');
-    expect(title).not.toContain('Reasoning...');
+    const [, bottom] = panelTitle(card).split('\n');
+    expect(bottom).toContain('💭 1');
+    expect(bottom).toContain('🛠️ 1');
+    expect(bottom).toContain('⏱️');
+    expect(bottom).not.toContain('Reasoning...');
   });
 });
