@@ -102,6 +102,18 @@ aiduCAT kill <id|#>
 - **展开面板**：🌊 开头的是思考文本；每个工具前是它的专属 emoji（👩🏻‍💻Bash 👩🏻‍🏫Read 👩🏻‍🔧Edit 👩🏻‍🎨Write 🕵🏻Grep 🥷🏻Glob 👩🏻‍🚀网络 👯🏻子agent 🤵🏻其他）
 - **结束**：状态词消失，只剩计数头；**边框颜色说结果** —— 完成绿 / 停止黄 / 出错红
 
+
+## 更新日志（f0.2+，2026-10-20）
+
+- **修复：`/model` 切 Provider 后实际仍走默认网关**——provider 的 `ANTHROPIC_BASE_URL`/KEY 在 run-flow→executor→adapter 两层断链，现已打通（合并社区 PR [#1](https://github.com/monkey2jack/aiduCAT/pull/1)，感谢 @hermesai8888-creator）
+- **修复：Provider 下拉选「默认网关」提交被静默丢弃**——表单哨兵值先归一化再校验
+- **新增：Provider 静态模型清单与跨 Provider 并集下拉**（PR #1）；Provider 可选 `env` 覆写后台/子代理模型变量（PR #1）
+- **新增：模型 id 支持 `/` `@`**（如 `cu/claude-opus-5-5`，PR #1）
+- **新增：面板头厂商 logo**（29 家，外部部署需自查 README「模型 logo」小节上传自己租户的 img_key）
+- **文档：补 README.zh.md、容器部署注意事项（见 issue [#2](https://github.com/monkey2jack/aiduCAT/issues/2)）、logo 上传指南**
+
+完整明细见 [CHANGELOG.md](./CHANGELOG.md)。
+
 ## 会话与队列
 
 - 每个私聊 / 群 / 话题 / 文档评论独立会话
@@ -152,6 +164,37 @@ Cloud-doc comments are document-scoped: 云文档评论按文档权限生效（d
 这套 **lark-cli 身份策略**是按 profile 隔离的，不是全局的。
 
 
+
+### 多 Provider（多网关）配置
+
+`/model` 卡支持三类下拉（Provider / Model / Effort）。默认网关走服务环境变量（`ANTHROPIC_BASE_URL` / `ANTHROPIC_API_KEY`）；额外的 provider 写在 `~/.lark-channel/config.json` 的 `profiles.<name>.modelProviders`：
+
+```json
+{
+  "modelProviders": {
+    "10r-jp": {
+      "label": "10r 东京",
+      "baseUrl": "https://your-gateway.example.com",
+      "apiKey": "${MY_TOKYO_KEY}",
+      "wire": "anthropic",
+      "contextWindow": 1000000,
+      "models": ["GLM-5.3-FlashX", "cu/claude-opus-5-5"],
+      "env": { "ANTHROPIC_SMALL_FAST_MODEL": "GLM-5.3-Flash" }
+    }
+  },
+  "defaultProviderName": "10r-US"
+}
+```
+
+要点：
+- `baseUrl` **不要带尾部 `/v1`**——Claude Code 会自动补 `/v1/messages`，带了会变成 `/v1/v1/messages` 触发网关风控
+- `apiKey` 支持 `${ENV_VAR}` 模板、明文，或 env/file/exec 引用链
+- `wire`: `anthropic`（Claude Code 系）或 `openai`（Codex 系）
+- `models`: 静态清单（声明后 Model 下拉改为跨 provider 并集、按模型自动配 provider）；省略则实时拉该网关 `/v1/models`（10router 系自动只拉 curated combo）
+- `env`: 切到该 provider 时附加覆写的环境变量（如后台小模型）
+- `contextWindow`: 上下文占用百分比表的分母
+
+保存后无需重启，下一轮对话生效。
 ### 模型 logo（面板头图标）
 
 面板头会显示模型厂商图标（OpenAI/Claude/Gemini 等 29 家）。飞书卡片 `custom_icon` 只认**本租户**上传图片的 `img_key`，外部 URL 会被飞书拒绝，因此仓库里的 `assets/lark-logo-keys.json` 只对上传过它们的那套飞书环境有效——**外部部署者需要自行上传一次并替换 key**：

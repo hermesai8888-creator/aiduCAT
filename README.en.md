@@ -101,6 +101,17 @@ One card, three parts:
 - **Expanded panel**: thinking text is prefixed 🌊; each tool line carries its own emoji (👩🏻‍💻Bash 👩🏻‍🏫Read 👩🏻‍🔧Edit 👩🏻‍🎨Write 🕵🏻Grep 🥷🏻Glob 👩🏻‍🚀Web 👯🏻agent 🤵🏻other)
 - **On completion**: the status word disappears; the **panel border carries the result** — done green / stopped yellow / error red
 
+
+## Changelog (f0.2+, 2026-10-20)
+
+- **Fix: /model provider switching never reached the gateway** — provider `ANTHROPIC_BASE_URL`/KEY broke at two layers (run-flow → executor → adapter); now wired through (community PR [#1](https://github.com/monkey2jack/aiduCAT/pull/1), thanks @hermesai8888-creator)
+- **Fix: picking the default provider in the /model dropdown was silently dropped** — form sentinel normalized before validation
+- **New: static provider model lists + union dropdown across providers** (PR #1); optional per-provider `env` overrides for haiku/subagents (PR #1)
+- **New: model ids accept `/` and `@`** (e.g. `cu/claude-opus-5-5`, PR #1)
+- **New: vendor logos in the panel header** (29 vendors; external deployments upload their own tenant keys — see the "Model logos" section)
+- **Docs: added README.zh.md, container deployment notes (issue [#2](https://github.com/monkey2jack/aiduCAT/issues/2)), logo upload guide**
+
+Full details in [CHANGELOG.md](./CHANGELOG.md).
 ## Sessions and queueing
 
 - Each DM / group / topic / doc-comment thread keeps its own session
@@ -149,6 +160,37 @@ Each profile uses a profile-local lark-cli directory at `~/.lark-channel/profile
 This **lark-cli identity policy** is per profile, not global.
 
 
+
+### Multi-provider setup
+
+The `/model` card offers three dropdowns (Provider / Model / Effort). The default gateway comes from service env (`ANTHROPIC_BASE_URL` / `ANTHROPIC_API_KEY`); extra providers live in `~/.lark-channel/config.json` under `profiles.<name>.modelProviders`:
+
+```json
+{
+  "modelProviders": {
+    "10r-jp": {
+      "label": "10r Tokyo",
+      "baseUrl": "https://your-gateway.example.com",
+      "apiKey": "${MY_TOKYO_KEY}",
+      "wire": "anthropic",
+      "contextWindow": 1000000,
+      "models": ["GLM-5.3-FlashX", "cu/claude-opus-5-5"],
+      "env": { "ANTHROPIC_SMALL_FAST_MODEL": "GLM-5.3-Flash" }
+    }
+  },
+  "defaultProviderName": "10r-US"
+}
+```
+
+Notes:
+- `baseUrl` must **not** end with `/v1` — Claude Code appends `/v1/messages` itself; a trailing `/v1` produces `/v1/v1/messages` and trips gateway WAFs
+- `apiKey` accepts `${ENV_VAR}` templates, plaintext, or env/file/exec ref chains
+- `wire`: `anthropic` (Claude Code) or `openai` (Codex)
+- `models`: static list (declared = the Model dropdown becomes a cross-provider union and the provider follows the model); omitted = live `/v1/models` pull (10router-family hosts automatically return only the curated combos)
+- `env`: extra environment overrides applied when this provider is selected (e.g. haiku-model vars)
+- `contextWindow`: denominator of the ctx % meter
+
+Takes effect next turn; no restart needed.
 ### Model logos (panel header icon)
 
 The panel header shows a vendor icon (OpenAI/Claude/Gemini, 29 vendors). Feishu cards reject external image URLs for `custom_icon` — they only render `img_key` values from images uploaded **to your own tenant** via `POST /open-apis/im/v1/images`. The shipped `assets/lark-logo-keys.json` is only valid for the tenant that uploaded them. For your own deployment:
