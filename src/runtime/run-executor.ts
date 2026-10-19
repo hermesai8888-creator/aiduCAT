@@ -25,6 +25,8 @@ export interface SubmitRunInput {
   effort?: string;
   images?: readonly string[];
   stopGraceMs?: number;
+  /** f0.2: per-run provider env (ANTHROPIC_* / OPENAI_*), applied last by the adapter. */
+  envOverrides?: Record<string, string>;
   nowait?: boolean;
   observability?: {
     profile: string;
@@ -107,6 +109,7 @@ export class RunExecutor {
       sandbox: input.policy.sandbox,
       permissionMode: input.policy.permissionMode,
       stopGraceMs: input.stopGraceMs,
+      envOverrides: input.envOverrides,
     };
     let run: AgentRun;
     try {

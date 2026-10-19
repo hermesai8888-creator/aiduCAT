@@ -26,7 +26,7 @@ function effortLabel(effort: string): string {
 
 export interface ModelCardOpts {
   /** Combo names from the chosen provider (live or cached). */
-  combos: Array<{ id: string; name: string }>;
+  combos: Array<{ id: string; name: string; label?: string }>;
   /** Provider dropdown choices (default first). Empty = hide provider row. */
   providers?: Array<{ id: string; label: string }>;
   /** Currently stored provider preference, if any. */
@@ -61,7 +61,7 @@ export function modelCard(opts: ModelCardOpts): object {
 
   const comboValues =
     opts.combos.length > 0
-      ? opts.combos.map((c) => ({ text: { tag: 'plain_text', content: c.name }, value: c.name }))
+      ? opts.combos.map((c) => ({ text: { tag: 'plain_text', content: c.label ?? c.name }, value: c.name }))
       // Feishu select_static rejects an empty options array — always give the
       // user something, and the unavailable hint above explains why.
       : [{ text: { tag: 'plain_text', content: '（取不到模型列表）' }, value: '__none__' }];

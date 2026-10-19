@@ -29,6 +29,7 @@ import {
   fetchProviderModels,
   normalizeProvider,
   providerChoices,
+  unionProviderModels,
 } from '../bot/model-providers';
 import { requestScopeGrantLink } from '../bot/wizard';
 import {
@@ -1402,7 +1403,7 @@ async function showModelCard(ctx: CommandContext): Promise<void> {
   const providers = ctx.controls.profileConfig.modelProviders ?? {};
   const currentProvider = normalizeProvider(providers, ctx.controls.cfg.preferences?.provider);
 
-  let combos: Array<{ id: string; name: string }> = [];
+  let combos: Array<{ id: string; name: string; label?: string }> = [];
   let totalModels: number | undefined;
   let source: 'live' | 'cached' | 'unavailable' = 'unavailable';
   if (currentProvider === DEFAULT_PROVIDER) {
@@ -1420,6 +1421,14 @@ async function showModelCard(ctx: CommandContext): Promise<void> {
     source = cat.source;
   }
 
+  // Providers with static lists: one Model dropdown across all of them; the
+  // provider follows the chosen model (see unionProviderModels).
+  const union = unionProviderModels(providers);
+  if (union.length > 0) {
+    combos = union;
+    source = 'live';
+  }
+
   const providerChoicesList = providerChoices(providers, ctx.controls.profileConfig.defaultProviderName);
   const card = modelCard({
     combos,
@@ -1427,7 +1436,9 @@ async function showModelCard(ctx: CommandContext): Promise<void> {
     currentEffort,
     source,
     agentKind: ctx.controls.profileConfig.agentKind,
-    ...(providerChoicesList.length > 1 ? { providers: providerChoicesList, currentProvider } : {}),
+    ...(union.length === 0 && providerChoicesList.length > 1
+      ? { providers: providerChoicesList, currentProvider }
+      : {}),
   });
   if (ctx.fromCardAction) await recallMessage(ctx, ctx.msg.messageId);
   await sendManagedCard(ctx.channel, ctx.msg.chatId, card, commandReplyOptions(ctx));
@@ -1473,6 +1484,23 @@ async function submitModelCard(ctx: CommandContext): Promise<void> {
   );
   // Map the dropdown sentinel back to the default id before persisting.
   if (parsed.provider === DEFAULT_PROVIDER_VALUE) parsed.provider = DEFAULT_PROVIDER;
+  const union = unionProviderModels(providers);
+  if (union.length > 0) {
+    // Provider is derived from the model; reject names in no list so a stale
+    // card cannot store a provider/model pair that cannot work.
+    const rawModel = String(fv.combo ?? '').trim();
+    const hit = union.find((c) => c.name === rawModel);
+    if (hit) {
+      parsed.model = hit.name;
+      parsed.provider = hit.provider;
+    } else if (rawModel && rawModel !== '__none__') {
+      await reply(ctx, '⚠️ 这个模型不在任何 provider 的列表里,请重新打开 /model 选择。');
+      return;
+    } else {
+      // Effort-only change: keep the stored provider.
+      parsed.provider = null;
+    }
+  }
   const currentModel = cfg.preferences?.model;
   const currentEffort = cfg.preferences?.effort;
   const nextModel = parsed.model ?? currentModel;
@@ -1537,15 +1565,20 @@ async function cancelModelCard(ctx: CommandContext): Promise<void> {
 
 /** Direct-text model switch — kept from f0.1 for `/model <name>` typing. */
 async function setModelDirect(value: string, ctx: CommandContext): Promise<void> {
-  if (!/^[\w.:-]{1,120}$/.test(value)) {
-    await reply(ctx, '❌ 模型名只能包含字母/数字/`.:-_`,长度 ≤ 120。');
+  if (!/^[\w.:@/-]{1,120}$/.test(value)) {
+    await reply(ctx, '❌ 模型名只能包含字母/数字/`.:-_@/`,长度 ≤ 120。');
     return;
   }
 
   const next = value.toLowerCase() === 'default' ? undefined : value;
+  // A typed name found in a provider's static list also selects that provider.
+  const hit = next
+    ? unionProviderModels(ctx.controls.profileConfig.modelProviders ?? {}).find((c) => c.name === next)
+    : undefined;
   const preferences: AppPreferences = {
     ...(ctx.controls.cfg.preferences ?? {}),
     model: next,
+    ...(hit ? { provider: hit.provider } : {}),
   };
   try {
     await configOps.savePreferencesConfig(

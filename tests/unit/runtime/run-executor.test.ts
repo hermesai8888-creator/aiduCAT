@@ -35,6 +35,32 @@ describe('RunExecutor policy runtime options', () => {
 
     await collect(execution.subscribe());
   });
+
+  it('forwards provider envOverrides into the agent run options', async () => {
+    const agent = new FakeAgentAdapter({
+      events: [{ type: 'done', terminationReason: 'normal' }],
+    });
+    const executor = new RunExecutor({
+      agent,
+      pool: new ProcessPool(() => 1),
+      activeRuns: new ActiveRuns(),
+      createRunId: () => 'run-env',
+      now: () => 1000,
+      postDoneExitGraceMs: 10,
+    });
+
+    const execution = await executor.submit({
+      scopeId: 'scope-env',
+      policy: policy(),
+      envOverrides: { ANTHROPIC_BASE_URL: 'https://gw.example.com' },
+    });
+
+    expect(agent.runOptions[0]).toMatchObject({
+      envOverrides: { ANTHROPIC_BASE_URL: 'https://gw.example.com' },
+    });
+
+    await collect(execution.subscribe());
+  });
 });
 
 function policy(overrides: Partial<RunPolicyAllow> = {}): RunPolicyAllow {

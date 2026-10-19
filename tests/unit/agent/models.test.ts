@@ -32,6 +32,11 @@ describe('agent model catalog', () => {
     // aiduCAT: free-form gateway combo ids pass through — behind 10router
     // the useful model names sit outside the hardcoded picker catalog.
     expect(normalizeModelSelection('claude', 'Gemini-3.8-Flash')).toBe('Gemini-3.8-Flash');
+    // Gateway ids with a vendor prefix or version tag pass through too.
+    expect(normalizeModelSelection('claude', 'cu/claude-opus-5-5')).toBe('cu/claude-opus-5-5');
+    expect(normalizeModelSelection('claude', 'model@2026-10')).toBe('model@2026-10');
+    // Anything outside the charset still falls back.
+    expect(normalizeModelSelection('claude', 'gpt-6-astra(xhigh)')).toBe(DEFAULT_MODEL);
   });
 
   it('resolves the --model argument, omitting it for the default', () => {
