@@ -152,11 +152,14 @@ export async function startRunFlow(input: StartRunFlowInput): Promise<StartRunFl
       // decides which env family the agent CLI reads (claude: ANTHROPIC_*,
       // codex: OPENAI_*). Resolution is async and failure-safe: on key
       // errors we log and fall back to the inherited service env.
-      ...(await runProviderEnvOverrides(
+      // Must land on `envOverrides` — spreading the map at the top level
+      // turned ANTHROPIC_BASE_URL etc. into stray SubmitRunInput keys that
+      // nothing read, so --model switched but the endpoint did not.
+      envOverrides: await runProviderEnvOverrides(
         input.profileConfig.modelProviders,
         input.profileConfig.preferences.provider,
         input.capability.agentId,
-      )),
+      ),
       // aiduCAT: forward the stored reasoning effort (claude forwards as --effort,
       // codex forwards as -c model_reasoning_effort="..."). If claude is set to
       // 'ultra' (supported on codex), automatically coerce to 'max' to avoid CLI warnings.
