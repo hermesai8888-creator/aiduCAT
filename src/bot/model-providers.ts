@@ -127,6 +127,18 @@ export async function fetchProviderModels(
   const def = providerDef(providers, providerId);
   if (!def) return { source: 'unavailable', models: [] };
 
+  // Static list from config wins: ModelProviderDef.models documents "live
+  // /v1/models pull when omitted", so when present it must be used as-is.
+  // Needed for gateways whose baseUrl cannot carry `/v1` (Claude Code would
+  // then call /v1/v1/messages) and therefore cannot serve /v1/models.
+  if (Array.isArray(def.models) && def.models.length > 0) {
+    return {
+      source: 'live',
+      models: def.models.slice(0, MAX_PROVIDER_MODELS),
+      total: def.models.length,
+    };
+  }
+
   const cached = modelsCache.get(providerId);
   if (cached && Date.now() - cached.fetchedAt < MODELS_TTL_MS) {
     return { source: 'cached', models: cached.models, total: cached.total };
