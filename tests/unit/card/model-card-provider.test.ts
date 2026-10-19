@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { modelCard, parseModelCardSubmit } from '../../../src/card/model-card.js';
-import { providerChoices, normalizeProvider } from '../../../src/bot/model-providers.js';
+import {
+  providerChoices,
+  normalizeProvider,
+  unionProviderModels,
+} from '../../../src/bot/model-providers.js';
 
 const providers = {
   '10r': {
@@ -45,6 +49,23 @@ describe('/model provider dropdown (f0.2)', () => {
       ['default', '10r'],
     );
     expect(bad.provider).toBeNull();
+  });
+
+  it('unions static model lists and tags each model with its provider', () => {
+    const union = unionProviderModels({
+      cpa: { label: 'CPA (LA)', baseUrl: 'http://cpa', apiKey: 'k', wire: 'anthropic', models: ['gpt-6.1-sol', 'shared'] },
+      '10r': { label: '10r 东京', baseUrl: 'http://10r', apiKey: 'k', wire: 'anthropic', models: ['cu/claude-opus-5-5', 'shared'] },
+      live: { label: 'no list', baseUrl: 'http://x', apiKey: 'k', wire: 'anthropic' },
+    });
+    expect(union.map((c) => [c.name, c.provider])).toEqual([
+      ['gpt-6.1-sol', 'cpa'],
+      ['shared', 'cpa'],
+      ['cu/claude-opus-5-5', '10r'],
+    ]);
+    expect(union[0]!.label).toBe('gpt-6.1-sol · CPA');
+    const card = JSON.stringify(modelCard({ combos: union }));
+    expect(card).toContain('cu/claude-opus-5-5 · 10r 东京');
+    expect(card).not.toContain('选择 provider');
   });
 
   it('normalizeProvider unknown ids fall back to default', () => {
