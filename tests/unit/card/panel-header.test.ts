@@ -31,14 +31,14 @@ describe('two-line panel header (猴哥点单 f0.2 终版)', () => {
       startedAt: Date.now() - 5_000,
     });
     expect(panelTitle(card)).toBe(
-      'Gemini-3.8-Flash · Max · 25k/1M (2%)\n💭 0 · 🛠️ 0 · ⏱️ 5s · 💭Reasoning...',
+      'Gemini-3.8-Flash · Max · 25k/1M (2%)\n💭 0 · 🛠️ 0 · ⏱️ 5s · ☤Reasoning...',
     );
   });
 
   it('omits ctx% when contextWindow unknown, omits effort when unset', () => {
     const state = stateWithUsage();
     const card = renderCard(state, { model: 'SomeModel' });
-    expect(panelTitle(card)).toBe('SomeModel · 25k/1M (3%)\n💭 0 · 🛠️ 0 · 💭Reasoning...');
+    expect(panelTitle(card)).toBe('SomeModel · 25k/1M (3%)\n💭 0 · 🛠️ 0 · ☤Reasoning...');
   });
 
   it('omits the whole ctx piece until usage arrives', () => {
@@ -47,7 +47,7 @@ describe('two-line panel header (猴哥点单 f0.2 终版)', () => {
       effort: 'high',
       contextWindow: 1_000_000,
     });
-    expect(panelTitle(card)).toBe('GLM-5.3-Flash · High\n💭 0 · 🛠️ 0 · 💭Reasoning...');
+    expect(panelTitle(card)).toBe('GLM-5.3-Flash · High\n💭 0 · 🛠️ 0 · ☤Reasoning...');
   });
 
   it('formats used/total with k/M units and percentage', () => {
@@ -92,7 +92,7 @@ describe('two-line panel header (猴哥点单 f0.2 终版)', () => {
   it('zero counts still render, status word trailing line 2', () => {
     const card = renderCard(initialState, { model: 'M', startedAt: Date.now() - 1000 });
     const [, bottom] = panelTitle(card).split('\n');
-    expect(bottom).toBe('💭 0 · 🛠️ 0 · ⏱️ 1s · 💭Reasoning...');
+    expect(bottom).toBe('💭 0 · 🛠️ 0 · ⏱️ 1s · ☤Reasoning...');
   });
 
   it('status word disappears on completion; counters stay', () => {

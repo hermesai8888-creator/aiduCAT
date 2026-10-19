@@ -28,7 +28,7 @@ exports[`run card renderer snapshots > collapses consecutive tools while preserv
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 0 · 🛠️ 3 · 🛠️Tooling...",
+            "content": "💭 0 · 🛠️ 3 · ☤Tooling...",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -43,7 +43,7 @@ exports[`run card renderer snapshots > collapses consecutive tools while preserv
   "config": {
     "streaming_mode": true,
     "summary": {
-      "content": "🛠️Tooling...",
+      "content": "☤Tooling...",
     },
   },
   "schema": "2.0",
@@ -126,7 +126,7 @@ exports[`run card renderer snapshots > renders active and completed thinking 1`]
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 1 · 🛠️ 0 · 💭Reasoning...",
+            "content": "💭 1 · 🛠️ 0 · ☤Reasoning...",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -141,7 +141,7 @@ exports[`run card renderer snapshots > renders active and completed thinking 1`]
   "config": {
     "streaming_mode": true,
     "summary": {
-      "content": "💭Reasoning...",
+      "content": "☤Reasoning...",
     },
   },
   "schema": "2.0",
@@ -427,7 +427,7 @@ exports[`run card renderer snapshots > renders initial running state 1`] = `
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 0 · 🛠️ 0 · 💭Reasoning...",
+            "content": "💭 0 · 🛠️ 0 · ☤Reasoning...",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -442,7 +442,7 @@ exports[`run card renderer snapshots > renders initial running state 1`] = `
   "config": {
     "streaming_mode": true,
     "summary": {
-      "content": "💭Reasoning...",
+      "content": "☤Reasoning...",
     },
   },
   "schema": "2.0",
@@ -507,7 +507,7 @@ exports[`run card renderer snapshots > renders tool running, done, and error sta
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 0 · 🛠️ 1 · 🛠️Tooling...",
+            "content": "💭 0 · 🛠️ 1 · ☤Tooling...",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -522,7 +522,7 @@ exports[`run card renderer snapshots > renders tool running, done, and error sta
   "config": {
     "streaming_mode": true,
     "summary": {
-      "content": "🛠️Tooling...",
+      "content": "☤Tooling...",
     },
   },
   "schema": "2.0",

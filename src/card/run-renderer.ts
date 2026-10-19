@@ -61,17 +61,17 @@ export function renderCard(state: RunState, options: RunCardRenderOptions = {}):
     }
   }
 
-  // f0.2 猴哥点单: the live status word (💭Reasoning... / 🛠️Tooling... /
+  // f0.2 猴哥点单: the live status word (☤Reasoning... / ☤Tooling... /
   // ☤aiduCATing...) moved INTO the panel header line 1, leftmost — ahead of
   // the 💭/🛠️/⏱️ counters. It disappears once the run ends; the panel border
   // color carries the result. No standalone status line above the panel.
   const statusWord =
     state.terminal === 'running'
       ? state.footer === 'tool_running'
-        ? '🛠️Tooling...'
+        ? '☤Tooling...'
         : state.footer === 'streaming'
           ? '☤aiduCATing...'
-          : '💭Reasoning...'
+          : '☤Reasoning...'
       : '';
 
   // aiduCAT: one collapsed panel carrying reasoning + every tool call + the
@@ -376,9 +376,9 @@ function summaryText(state: RunState): string {
   if (state.terminal === 'idle_timeout') return '⚠️Timeout';
   if (state.terminal === 'error') return '❌Error';
   if (state.terminal === 'done') return '✅Done';
-  if (state.footer === 'tool_running') return '🛠️Tooling...';
+  if (state.footer === 'tool_running') return '☤Tooling...';
   if (state.footer === 'streaming') return '☤aiduCATing...';
-  return '💭Reasoning...';
+  return '☤Reasoning...';
 }
 
 function truncate(s: string, max: number): string {
