@@ -211,6 +211,13 @@ export interface ModelProviderDef {
   models?: string[];
   /** Context window for the ctx % meter (f0.2: 10r combos are all 1M). */
   contextWindow?: number;
+  /**
+   * Extra env applied on top of the credential overrides when this provider
+   * is selected, e.g. `ANTHROPIC_DEFAULT_HAIKU_MODEL` / `CLAUDE_CODE_SUBAGENT_MODEL`
+   * so background and sub-agent calls use a model this provider serves.
+   * Only UPPER_SNAKE keys with string values are applied.
+   */
+  env?: Record<string, string>;
 }
 
 export function isComplete(cfg: Partial<AppConfig>): cfg is AppConfig {

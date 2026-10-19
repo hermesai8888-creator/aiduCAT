@@ -269,6 +269,11 @@ async function runProviderEnvOverrides(
     base.OPENAI_API_KEY = key;
     if (def.contextWindow) base.CODEX_CONTEXT_WINDOW = String(def.contextWindow);
   }
+  if (def.env && typeof def.env === 'object') {
+    for (const [k, v] of Object.entries(def.env)) {
+      if (/^[A-Z_][A-Z0-9_]*$/.test(k) && typeof v === 'string') base[k] = v;
+    }
+  }
   void agentId;
   return base;
 }
