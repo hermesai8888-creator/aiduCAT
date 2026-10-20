@@ -48,7 +48,7 @@ exports[`run card renderer snapshots > collapses consecutive tools while preserv
   "config": {
     "streaming_mode": true,
     "summary": {
-      "content": "Processing…",
+      "content": "☤Processing…",
     },
   },
   "schema": "2.0",
@@ -151,7 +151,7 @@ exports[`run card renderer snapshots > renders active and completed thinking 1`]
   "config": {
     "streaming_mode": true,
     "summary": {
-      "content": "Thinking…",
+      "content": "☤Thinking…",
     },
   },
   "schema": "2.0",
@@ -456,7 +456,7 @@ exports[`run card renderer snapshots > renders initial running state 1`] = `
   "config": {
     "streaming_mode": true,
     "summary": {
-      "content": "Thinking…",
+      "content": "☤Thinking…",
     },
   },
   "schema": "2.0",
@@ -541,7 +541,7 @@ exports[`run card renderer snapshots > renders tool running, done, and error sta
   "config": {
     "streaming_mode": true,
     "summary": {
-      "content": "Processing…",
+      "content": "☤Processing…",
     },
   },
   "schema": "2.0",
