@@ -368,9 +368,9 @@ function summaryText(state: RunState): string {
   if (state.terminal === 'idle_timeout') return '⚠️Timeout';
   if (state.terminal === 'error') return '❌Error';
   if (state.terminal === 'done') return '✅Done';
-  if (state.footer === 'tool_running') return 'Processing…';
-  if (state.footer === 'streaming') return 'aiduCATing…';
-  return 'Thinking…';
+  if (state.footer === 'tool_running') return '☤Processing…';
+  if (state.footer === 'streaming') return '☤aiduCATing…';
+  return '☤Thinking…';
 }
 
 function truncate(s: string, max: number): string {
