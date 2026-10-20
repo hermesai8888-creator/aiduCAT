@@ -32,7 +32,7 @@ exports[`run card renderer snapshots > collapses consecutive tools while preserv
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "思考0 · 工具3",
+            "content": "💭 0 · 🛠️ 3",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -82,7 +82,7 @@ exports[`run card renderer snapshots > collapses consecutive tools while preserv
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "思考0 · 工具3",
+            "content": "💭 0 · 🛠️ 3",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -134,7 +134,7 @@ exports[`run card renderer snapshots > renders active and completed thinking 1`]
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "思考1 · 工具0",
+            "content": "💭 1 · 🛠️ 0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -186,7 +186,7 @@ exports[`run card renderer snapshots > renders active and completed thinking 2`]
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "思考1 · 工具0",
+            "content": "💭 1 · 🛠️ 0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -234,7 +234,7 @@ exports[`run card renderer snapshots > renders done, error, interrupted, and idl
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "思考0 · 工具0",
+            "content": "💭 0 · 🛠️ 0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -282,7 +282,7 @@ exports[`run card renderer snapshots > renders done, error, interrupted, and idl
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "思考0 · 工具0",
+            "content": "💭 0 · 🛠️ 0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -334,7 +334,7 @@ exports[`run card renderer snapshots > renders done, error, interrupted, and idl
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "思考0 · 工具0",
+            "content": "💭 0 · 🛠️ 0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -386,7 +386,7 @@ exports[`run card renderer snapshots > renders done, error, interrupted, and idl
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "思考0 · 工具0",
+            "content": "💭 0 · 🛠️ 0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -438,7 +438,7 @@ exports[`run card renderer snapshots > renders initial running state 1`] = `
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "思考0 · 工具0",
+            "content": "💭 0 · 🛠️ 0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -522,7 +522,7 @@ exports[`run card renderer snapshots > renders tool running, done, and error sta
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "思考0 · 工具1",
+            "content": "💭 0 · 🛠️ 1",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -570,7 +570,7 @@ exports[`run card renderer snapshots > renders tool running, done, and error sta
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "思考0 · 工具1",
+            "content": "💭 0 · 🛠️ 1",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -618,7 +618,7 @@ exports[`run card renderer snapshots > renders tool running, done, and error sta
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "思考0 · 工具1",
+            "content": "💭 0 · 🛠️ 1",
             "tag": "markdown",
             "text_size": "notation",
           },

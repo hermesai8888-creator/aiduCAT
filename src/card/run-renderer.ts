@@ -238,13 +238,13 @@ function metaHeader(state: RunState, options: RunCardRenderOptions): string {
   // The model vendor logo stays in the header icon slot (left side).
   const parts: string[] = [];
   if (options.model) parts.push(options.model);
-  parts.push(`思考${state.reasoning.segments}`);
+  parts.push(`💭 ${state.reasoning.segments}`);
   const toolCount = state.blocks.filter((b) => b.kind === "tool").length;
-  parts.push(`工具${toolCount}`);
+  parts.push(`🛠️ ${toolCount}`);
   if (options.startedAt) {
     const secs = Math.max(0, Math.round((Date.now() - options.startedAt) / 1000));
     const label = secs >= 60 ? `${Math.floor(secs / 60)}m${secs % 60}s` : `${secs}s`;
-    parts.push(`耗时${label}`);
+    parts.push(`⏱️ ${label}`);
   }
   return parts.join(" · ");
 }

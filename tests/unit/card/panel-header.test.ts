@@ -18,14 +18,14 @@ function statusLine(card: object): string | null {
 }
 
 describe('one-line minimal panel header (f0.2+ 猴哥点单 2026-10-20)', () => {
-  it('modelID · 思考n · 工具n · 耗时ns — one line, no emoji/effort/ctx', () => {
+  it('modelID · 💭n · 🛠️n · ⏱️ns — one line, no effort/ctx', () => {
     const card = renderCard(initialState, {
       model: 'Gemini-3.8-Flash',
       effort: 'max',
       contextWindow: 1048576,
       startedAt: Date.now() - 5_000,
     });
-    expect(panelTitle(card)).toBe('Gemini-3.8-Flash · 思考0 · 工具0 · 耗时5s');
+    expect(panelTitle(card)).toBe('Gemini-3.8-Flash · 💭 0 · 🛠️ 0 · ⏱️ 5s');
     expect(panelTitle(card)).not.toContain('25k/1M');
     expect(panelTitle(card)).not.toContain('Max');
   });
@@ -36,14 +36,14 @@ describe('one-line minimal panel header (f0.2+ 猴哥点单 2026-10-20)', () => 
     state = reduce(state, { type: 'tool_use', id: 't1', name: 'Bash', input: {} });
     const card = renderCard(state, { model: 'M', startedAt: Date.now() - 2_000 });
     const title = panelTitle(card);
-    expect(title).toContain('思考1');
-    expect(title).toContain('工具1');
-    expect(title).toContain('耗时2s');
+    expect(title).toContain('💭 1');
+    expect(title).toContain('🛠️ 1');
+    expect(title).toContain('⏱️ 2s');
   });
 
   it('elapsed formats as m+s past the minute', () => {
     const card = renderCard(initialState, { model: 'M', startedAt: Date.now() - 65_000 });
-    expect(panelTitle(card)).toContain('耗时1m5s');
+    expect(panelTitle(card)).toContain('⏱️ 1m5s');
   });
 });
 
