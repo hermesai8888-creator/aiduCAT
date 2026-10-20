@@ -20,7 +20,7 @@ export type VendorLogo =
   | 'kimi' | 'doubao' | 'hunyuan' | 'minimax' | 'stepfun' | 'zhipu'
   | 'chatglm' | 'baichuan' | 'yi' | 'spark' | 'wenxin' | 'sensenova'
   | 'internlm' | 'mistral' | 'cohere' | 'nvidia' | 'meta' | 'gemma'
-  | 'moonshot' | 'google' | 'anthropic' | 'stability';
+  | 'moonshot' | 'google' | 'anthropic' | 'stability' | 'inception';
 
 let cachedKeys: Partial<Record<VendorLogo, string>> | undefined;
 
@@ -56,6 +56,7 @@ function loadKeys(): Partial<Record<VendorLogo, string>> {
  * most specific vendor keyword to the most generic.
  */
 const VENDOR_PATTERNS: Array<[RegExp, VendorLogo]> = [
+  [/mercury|inception/, 'inception'],
   [/gemini|palm|bard/, 'gemini'],
   [/gemma/, 'gemma'],
   [/claude|opus|sonnet|haiku/, 'claude'],
