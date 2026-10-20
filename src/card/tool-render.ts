@@ -72,7 +72,7 @@ export function toolBodyMd(tool: ToolEntry): string {
       parts.push(`**Output**\n\`\`\`\n${truncated}\n\`\`\``);
     }
   } else if (tool.status === 'running') {
-    parts.push('_☤aiduCATing…_');
+    parts.push('_aiduCATing…_');
   }
 
   const body = parts.join('\n\n');

@@ -5,6 +5,10 @@ exports[`run card renderer snapshots > collapses consecutive tools while preserv
   "body": {
     "elements": [
       {
+        "content": "☤ Processing…",
+        "tag": "markdown",
+      },
+      {
         "border": {
           "color": "grey",
           "corner_radius": "5px",
@@ -28,7 +32,7 @@ exports[`run card renderer snapshots > collapses consecutive tools while preserv
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 0 · 🛠️ 3 · ☤Tooling...",
+            "content": "思考0 · 工具3",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -43,7 +47,7 @@ exports[`run card renderer snapshots > collapses consecutive tools while preserv
   "config": {
     "streaming_mode": true,
     "summary": {
-      "content": "☤Tooling...",
+      "content": "Processing…",
     },
   },
   "schema": "2.0",
@@ -78,7 +82,7 @@ exports[`run card renderer snapshots > collapses consecutive tools while preserv
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 0 · 🛠️ 3",
+            "content": "思考0 · 工具3",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -105,6 +109,10 @@ exports[`run card renderer snapshots > renders active and completed thinking 1`]
   "body": {
     "elements": [
       {
+        "content": "☤ Thinking…",
+        "tag": "markdown",
+      },
+      {
         "border": {
           "color": "grey",
           "corner_radius": "5px",
@@ -126,7 +134,7 @@ exports[`run card renderer snapshots > renders active and completed thinking 1`]
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 1 · 🛠️ 0 · ☤Reasoning...",
+            "content": "思考1 · 工具0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -141,7 +149,7 @@ exports[`run card renderer snapshots > renders active and completed thinking 1`]
   "config": {
     "streaming_mode": true,
     "summary": {
-      "content": "☤Reasoning...",
+      "content": "Thinking…",
     },
   },
   "schema": "2.0",
@@ -178,7 +186,7 @@ exports[`run card renderer snapshots > renders active and completed thinking 2`]
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 1 · 🛠️ 0",
+            "content": "思考1 · 工具0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -226,7 +234,7 @@ exports[`run card renderer snapshots > renders done, error, interrupted, and idl
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 0 · 🛠️ 0",
+            "content": "思考0 · 工具0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -274,8 +282,7 @@ exports[`run card renderer snapshots > renders done, error, interrupted, and idl
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "❌
-💭 0 · 🛠️ 0",
+            "content": "思考0 · 工具0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -327,7 +334,7 @@ exports[`run card renderer snapshots > renders done, error, interrupted, and idl
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 0 · 🛠️ 0",
+            "content": "思考0 · 工具0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -379,7 +386,7 @@ exports[`run card renderer snapshots > renders done, error, interrupted, and idl
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 0 · 🛠️ 0",
+            "content": "思考0 · 工具0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -406,6 +413,10 @@ exports[`run card renderer snapshots > renders initial running state 1`] = `
   "body": {
     "elements": [
       {
+        "content": "☤ Thinking…",
+        "tag": "markdown",
+      },
+      {
         "border": {
           "color": "grey",
           "corner_radius": "5px",
@@ -427,7 +438,7 @@ exports[`run card renderer snapshots > renders initial running state 1`] = `
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 0 · 🛠️ 0 · ☤Reasoning...",
+            "content": "思考0 · 工具0",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -442,7 +453,7 @@ exports[`run card renderer snapshots > renders initial running state 1`] = `
   "config": {
     "streaming_mode": true,
     "summary": {
-      "content": "☤Reasoning...",
+      "content": "Thinking…",
     },
   },
   "schema": "2.0",
@@ -486,6 +497,10 @@ exports[`run card renderer snapshots > renders tool running, done, and error sta
   "body": {
     "elements": [
       {
+        "content": "☤ Processing…",
+        "tag": "markdown",
+      },
+      {
         "border": {
           "color": "grey",
           "corner_radius": "5px",
@@ -507,7 +522,7 @@ exports[`run card renderer snapshots > renders tool running, done, and error sta
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 0 · 🛠️ 1 · ☤Tooling...",
+            "content": "思考0 · 工具1",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -522,7 +537,7 @@ exports[`run card renderer snapshots > renders tool running, done, and error sta
   "config": {
     "streaming_mode": true,
     "summary": {
-      "content": "☤Tooling...",
+      "content": "Processing…",
     },
   },
   "schema": "2.0",
@@ -555,7 +570,7 @@ exports[`run card renderer snapshots > renders tool running, done, and error sta
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 0 · 🛠️ 1",
+            "content": "思考0 · 工具1",
             "tag": "markdown",
             "text_size": "notation",
           },
@@ -603,7 +618,7 @@ exports[`run card renderer snapshots > renders tool running, done, and error sta
           "icon_expanded_angle": -180,
           "icon_position": "right",
           "title": {
-            "content": "💭 0 · 🛠️ 1",
+            "content": "思考0 · 工具1",
             "tag": "markdown",
             "text_size": "notation",
           },

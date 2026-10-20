@@ -65,18 +65,22 @@ export function renderCard(state: RunState, options: RunCardRenderOptions = {}):
   // ☤aiduCATing...) moved INTO the panel header line 1, leftmost — ahead of
   // the 💭/🛠️/⏱️ counters. It disappears once the run ends; the panel border
   // color carries the result. No standalone status line above the panel.
+  // f0.2+ 猴哥点单 (2026-10-20): the live status line moves OUT of the panel —
+  // rendered between the answer and the panel. Words renamed: Reasoning→
+  // Thinking, Tooling→Processing. Header keeps only hard counters.
   const statusWord =
     state.terminal === 'running'
       ? state.footer === 'tool_running'
-        ? '☤Tooling...'
+        ? 'Processing…'
         : state.footer === 'streaming'
-          ? '☤aiduCATing...'
-          : '☤Reasoning...'
+          ? 'aiduCATing…'
+          : 'Thinking…'
       : '';
 
   // aiduCAT: one collapsed panel carrying reasoning + every tool call + the
   // run meta header (aiduPOP layout). Hidden when there is nothing to show.
-  const popPanel = aiduPopPanel(state, options, statusWord);
+  const popPanel = aiduPopPanel(state, options, '');
+  if (statusWord) elements.push(markdown(`☤ ${statusWord}`));
   if (popPanel) elements.push(popPanel);
 
   // aiduCAT clarify: when the run ended while waiting on a parsed
@@ -176,7 +180,7 @@ function aiduPopPanel(state: RunState, options: RunCardRenderOptions, statusWord
   const hasReasoning = state.reasoning.content.trim().length > 0;
   const hasError = state.terminal === 'error' && !!state.errorMsg;
 
-  const meta = metaHeader(state, options, statusWord);
+  const meta = metaHeader(state, options);
   if (!hasReasoning && tools.length === 0 && !meta) return null;
 
   const title = meta;
@@ -228,35 +232,21 @@ function panelBorderColor(state: RunState): 'grey' | 'green' | 'yellow' | 'red' 
  * Elapsed keeps ticking across card updates because renderCard is re-run on
  * every streaming update with the fixed `options.startedAt`.
  */
-function metaHeader(state: RunState, options: RunCardRenderOptions, statusWord = ''): string {
-  // f0.2 猴哥点单 (调整): line 1 = model · effort · context; line 2 = the
-  // live status word (leftmost, only while running) followed by the
-  // thinking/tool/elapsed counters. On completion the status word disappears
-  // and the counters keep the row stable.
-  const line1: string[] = [];
-  if (options.model) line1.push(options.model);
-  if (options.effort) line1.push(effortLabel(options.effort));
-  const ctx = contextUsageText(state, options);
-  if (ctx) line1.push(ctx);
-  if (state.terminal === 'error') line1.push('❌');
-
-  const line2: string[] = [];
-  line2.push(`💭 ${state.reasoning.segments}`);
-  const toolCount = state.blocks.filter((b) => b.kind === 'tool').length;
-  line2.push(`🛠️ ${toolCount}`);
+function metaHeader(state: RunState, options: RunCardRenderOptions): string {
+  // f0.2+ 猴哥点单 (2026-10-20): one-line minimal header —
+  //   modelID · 思考n · 工具n · 耗时ns   (no emoji, no effort/ctx line)
+  // The model vendor logo stays in the header icon slot (left side).
+  const parts: string[] = [];
+  if (options.model) parts.push(options.model);
+  parts.push(`思考${state.reasoning.segments}`);
+  const toolCount = state.blocks.filter((b) => b.kind === "tool").length;
+  parts.push(`工具${toolCount}`);
   if (options.startedAt) {
     const secs = Math.max(0, Math.round((Date.now() - options.startedAt) / 1000));
     const label = secs >= 60 ? `${Math.floor(secs / 60)}m${secs % 60}s` : `${secs}s`;
-    line2.push(`⏱️ ${label}`);
+    parts.push(`耗时${label}`);
   }
-  // 猴哥点单: status word trails the counters so the numbers don't shift
-  // leftward every time the word appears or changes.
-  if (statusWord) line2.push(statusWord);
-
-  // 猴哥点单 f0.2 终版: 回归两行分布 —
-  //   line 1: model · effort · context
-  //   line 2: 💭 n · 🛠️ n · ⏱️ ns · 状态词（运行时殿后，结束消失）
-  return [line1.join(' · '), line2.join(' · ')].filter(Boolean).join('\n');
+  return parts.join(" · ");
 }
 
 /**
@@ -376,9 +366,9 @@ function summaryText(state: RunState): string {
   if (state.terminal === 'idle_timeout') return '⚠️Timeout';
   if (state.terminal === 'error') return '❌Error';
   if (state.terminal === 'done') return '✅Done';
-  if (state.footer === 'tool_running') return '☤Tooling...';
-  if (state.footer === 'streaming') return '☤aiduCATing...';
-  return '☤Reasoning...';
+  if (state.footer === 'tool_running') return 'Processing…';
+  if (state.footer === 'streaming') return 'aiduCATing…';
+  return 'Thinking…';
 }
 
 function truncate(s: string, max: number): string {

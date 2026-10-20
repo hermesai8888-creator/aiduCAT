@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { renderCard } from '../../../src/card/run-renderer.js';
-import { initialState, reduce, type RunState } from '../../../src/card/run-state.js';
+import { initialState, reduce } from '../../../src/card/run-state.js';
 
 /** Extract the collapsible_panel header title markdown from a rendered card. */
 function panelTitle(card: object): string {
@@ -10,105 +10,65 @@ function panelTitle(card: object): string {
   return JSON.parse(`"${m[1]}"`);
 }
 
-function stateWithUsage(overrides: Partial<RunState> = {}): RunState {
-  let state = reduce(initialState, {
-    type: 'usage',
-    inputTokens: 4051,
-    outputTokens: 532,
-    cachedInputTokens: 20463,
-    cacheCreationInputTokens: 0,
-  });
-  return { ...state, ...overrides };
+/** The ☤ status line rendered between answer and panel (or null). */
+function statusLine(card: object): string | null {
+  const json = JSON.stringify(card);
+  const m = json.match(/"content":"☤ ([^"]+)"/);
+  return m ? `☤ ${m[1]}` : null;
 }
 
-describe('two-line panel header (猴哥点单 f0.2 终版)', () => {
-  it('line1 = model·effort·ctx, line2 = counters + status word', () => {
-    const state = stateWithUsage();
-    const card = renderCard(state, {
+describe('one-line minimal panel header (f0.2+ 猴哥点单 2026-10-20)', () => {
+  it('modelID · 思考n · 工具n · 耗时ns — one line, no emoji/effort/ctx', () => {
+    const card = renderCard(initialState, {
       model: 'Gemini-3.8-Flash',
       effort: 'max',
       contextWindow: 1048576,
       startedAt: Date.now() - 5_000,
     });
-    expect(panelTitle(card)).toBe(
-      'Gemini-3.8-Flash · Max · 25k/1M (2%)\n💭 0 · 🛠️ 0 · ⏱️ 5s · ☤Reasoning...',
-    );
+    expect(panelTitle(card)).toBe('Gemini-3.8-Flash · 思考0 · 工具0 · 耗时5s');
+    expect(panelTitle(card)).not.toContain('25k/1M');
+    expect(panelTitle(card)).not.toContain('Max');
   });
 
-  it('omits ctx% when contextWindow unknown, omits effort when unset', () => {
-    const state = stateWithUsage();
-    const card = renderCard(state, { model: 'SomeModel' });
-    expect(panelTitle(card)).toBe('SomeModel · 25k/1M (3%)\n💭 0 · 🛠️ 0 · ☤Reasoning...');
-  });
-
-  it('omits the whole ctx piece until usage arrives', () => {
-    const card = renderCard(initialState, {
-      model: 'GLM-5.3-Flash',
-      effort: 'high',
-      contextWindow: 1_000_000,
-    });
-    expect(panelTitle(card)).toBe('GLM-5.3-Flash · High\n💭 0 · 🛠️ 0 · ☤Reasoning...');
-  });
-
-  it('formats used/total with k/M units and percentage', () => {
-    let state = reduce(initialState, {
-      type: 'usage',
-      inputTokens: 100_000,
-      outputTokens: 100,
-      cachedInputTokens: 400_000,
-      cacheCreationInputTokens: 0,
-    });
-    const card = renderCard(state, { model: 'M', contextWindow: 1_000_000 });
-    expect(panelTitle(card)).toContain('500.1k/1M (50%)');
-  });
-
-  it('formats accumulated usage without claiming an impossible 100% window fill', () => {
-    let state = reduce(initialState, {
-      type: 'usage',
-      inputTokens: 900_000,
-      outputTokens: 200_000,
-    });
-    const card = renderCard(state, { model: 'M', contextWindow: 1_000_000 });
-    expect(panelTitle(card)).toContain('1.1M/1M (100%)');
-  });
-
-  it('ignores the cumulative result-event usage (would show inflated 100%)', () => {
-    let state = reduce(initialState, {
-      type: 'usage',
-      inputTokens: 25_000,
-      outputTokens: 500,
-      cachedInputTokens: 0,
-    });
-    state = reduce(state, {
-      type: 'usage',
-      inputTokens: 900_000,
-      outputTokens: 200_000,
-      cumulative: true,
-    });
-    const card = renderCard(state, { model: 'M', contextWindow: 1_000_000 });
-    expect(panelTitle(card)).toContain('25.5k/1M (3%)');
-  });
-
-  it('zero counts still render, status word trailing line 2', () => {
-    const card = renderCard(initialState, { model: 'M', startedAt: Date.now() - 1000 });
-    const [, bottom] = panelTitle(card).split('\n');
-    expect(bottom).toBe('💭 0 · 🛠️ 0 · ⏱️ 1s · ☤Reasoning...');
-  });
-
-  it('status word disappears on completion; counters stay', () => {
-    let state = reduce(initialState, { type: 'thinking', delta: 'hmm' });
+  it('counts reflect thinking segments / tool blocks and ticking elapsed', () => {
+    let state = reduce(initialState, { type: 'thinking', delta: 'a' });
+    state = reduce(state, { type: 'thinking', delta: 'b' });
     state = reduce(state, { type: 'tool_use', id: 't1', name: 'Bash', input: {} });
-    state = reduce(state, { type: 'done', terminationReason: 'normal' });
-    const card = renderCard(state, {
-      model: 'M',
-      effort: 'low',
-      contextWindow: 1_000_000,
-      startedAt: Date.now() - 2000,
-    });
-    const [, bottom] = panelTitle(card).split('\n');
-    expect(bottom).toContain('💭 1');
-    expect(bottom).toContain('🛠️ 1');
-    expect(bottom).toContain('⏱️');
-    expect(bottom).not.toContain('Reasoning...');
+    const card = renderCard(state, { model: 'M', startedAt: Date.now() - 2_000 });
+    const title = panelTitle(card);
+    expect(title).toContain('思考1');
+    expect(title).toContain('工具1');
+    expect(title).toContain('耗时2s');
+  });
+
+  it('elapsed formats as m+s past the minute', () => {
+    const card = renderCard(initialState, { model: 'M', startedAt: Date.now() - 65_000 });
+    expect(panelTitle(card)).toContain('耗时1m5s');
+  });
+});
+
+describe('status line between answer and panel', () => {
+  it('default running state renders Thinking…', () => {
+    const card = renderCard(initialState, { model: 'M' });
+    expect(statusLine(card)).toBe('☤ Thinking…');
+  });
+
+  it('tool running renders Processing…', () => {
+    const state = reduce(initialState, { type: 'tool_use', id: 't1', name: 'Bash', input: {} });
+    const card = renderCard(state, { model: 'M' });
+    expect(statusLine(card)).toBe('☤ Processing…');
+  });
+
+  it('no status line once the run ends', () => {
+    const state = reduce(initialState, { type: 'done', terminationReason: 'normal' });
+    const card = renderCard(state, { model: 'M' });
+    expect(statusLine(card)).toBeNull();
+  });
+
+  it('old words Reasoning/Tooling no longer appear in user-facing text', () => {
+    const state = reduce(initialState, { type: 'tool_use', id: 't1', name: 'Bash', input: {} });
+    const json = JSON.stringify(renderCard(state, { model: 'M' }));
+    expect(json).not.toContain('Tooling');
+    expect(json).not.toContain('Reasoning...');
   });
 });
