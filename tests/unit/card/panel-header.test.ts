@@ -13,8 +13,8 @@ function panelTitle(card: object): string {
 /** The ☤ status line rendered between answer and panel (or null). */
 function statusLine(card: object): string | null {
   const json = JSON.stringify(card);
-  const m = json.match(/"content":"☤ ([^"]+)"/);
-  return m ? `☤ ${m[1]}` : null;
+  const m = json.match(/"content":"☤([^"]+)"/);
+  return m ? `☤${m[1]}` : null;
 }
 
 describe('one-line minimal panel header (f0.2+ 猴哥点单 2026-10-20)', () => {
@@ -50,13 +50,13 @@ describe('one-line minimal panel header (f0.2+ 猴哥点单 2026-10-20)', () => 
 describe('status line between answer and panel', () => {
   it('default running state renders Thinking…', () => {
     const card = renderCard(initialState, { model: 'M' });
-    expect(statusLine(card)).toBe('☤ Thinking…');
+    expect(statusLine(card)).toBe('☤Thinking…');
   });
 
   it('tool running renders Processing…', () => {
     const state = reduce(initialState, { type: 'tool_use', id: 't1', name: 'Bash', input: {} });
     const card = renderCard(state, { model: 'M' });
-    expect(statusLine(card)).toBe('☤ Processing…');
+    expect(statusLine(card)).toBe('☤Processing…');
   });
 
   it('no status line once the run ends', () => {

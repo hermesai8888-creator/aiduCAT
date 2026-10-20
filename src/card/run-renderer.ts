@@ -82,7 +82,7 @@ export function renderCard(state: RunState, options: RunCardRenderOptions = {}):
   const popPanel = aiduPopPanel(state, options, '');
   // f0.2+ 猴哥点单: notation size so the status line reads as a caption,
   // matching the panel body size instead of full answer text.
-  if (statusWord) elements.push(noteMd(`☤ ${statusWord}`));
+  if (statusWord) elements.push(noteMd(`☤${statusWord}`));
   if (popPanel) elements.push(popPanel);
 
   // aiduCAT clarify: when the run ended while waiting on a parsed
