@@ -7,6 +7,7 @@ exports[`run card renderer snapshots > collapses consecutive tools while preserv
       {
         "content": "☤ Processing…",
         "tag": "markdown",
+        "text_size": "notation",
       },
       {
         "border": {
@@ -111,6 +112,7 @@ exports[`run card renderer snapshots > renders active and completed thinking 1`]
       {
         "content": "☤ Thinking…",
         "tag": "markdown",
+        "text_size": "notation",
       },
       {
         "border": {
@@ -415,6 +417,7 @@ exports[`run card renderer snapshots > renders initial running state 1`] = `
       {
         "content": "☤ Thinking…",
         "tag": "markdown",
+        "text_size": "notation",
       },
       {
         "border": {
@@ -499,6 +502,7 @@ exports[`run card renderer snapshots > renders tool running, done, and error sta
       {
         "content": "☤ Processing…",
         "tag": "markdown",
+        "text_size": "notation",
       },
       {
         "border": {
