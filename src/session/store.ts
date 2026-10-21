@@ -3,6 +3,23 @@ import { paths } from '../config/paths';
 import { log } from '../core/logger';
 import { writeFileAtomic } from '../platform/atomic-write';
 
+/** f0.2+ 猴哥点单: session-lifetime counters for /status. /new resets. */
+export interface SessionStats {
+  startedAt: number;
+  /** Last per-API-call usage snapshot (tokens + when it arrived). */
+  lastUsageAt?: number;
+  lastOutputTokens?: number;
+  /** Cumulative across every API call since session creation. */
+  tokensIn: number;
+  tokensOut: number;
+  cacheRead: number;
+  cacheCreate: number;
+  userMessages: number;
+  agentMessages: number;
+  /** Output tokens / wall-clock seconds across the session (avg tps). */
+  tpsAvg?: number;
+}
+
 export interface SessionEntry {
   /** May be absent if the entry was created by /timeout before any run
    * recorded a session id. Treat absence as "no resumable session". */
@@ -10,6 +27,8 @@ export interface SessionEntry {
   /** Pinned cwd for the resumable session. Absent for the same reason. */
   cwd?: string;
   updatedAt: number;
+  /** f0.2+ /status: per-session cumulative stats, /new wipes them. */
+  stats?: SessionStats;
   /** Per-scope idle-timeout override (minutes). 0 = explicitly off for this
    * scope, undefined = follow global default. Session resets preserve this
    * scope preference while removing the resumable session id/cwd. */
@@ -85,7 +104,68 @@ export class SessionStore {
       ...(prev?.idleTimeoutMinutes !== undefined
         ? { idleTimeoutMinutes: prev.idleTimeoutMinutes }
         : {}),
+      ...(prev?.stats ? { stats: prev.stats } : {}),
     };
+    this.schedulePersist();
+  }
+
+  /** f0.2+: accumulate one usage snapshot into the session's stats. */
+  recordUsage(
+    chatId: string,
+    u: { inputTokens?: number; outputTokens?: number; cachedInputTokens?: number; cacheCreationInputTokens?: number },
+  ): void {
+    const entry = this.data[chatId];
+    if (!entry) return;
+    const st: SessionStats = entry.stats ?? {
+      startedAt: Date.now(),
+      tokensIn: 0,
+      tokensOut: 0,
+      cacheRead: 0,
+      cacheCreate: 0,
+      userMessages: 0,
+      agentMessages: 0,
+    };
+    // Usage snapshots are per-API-call totals (not deltas) for the context
+    // meter, but for lifetime accumulation a plain max() is wrong across
+    // multi-turn (each turn reloads the prefix). Deltas are also unreliable
+    // (cache hits collapse the numbers). Sum *output* deltas (a true counter —
+    // each call generates fresh tokens) and keep latest *input* totals (the
+    // context meter reads them directly).
+    const outDelta = Math.max(0, (u.outputTokens ?? 0) - (st.lastOutputTokens ?? 0));
+    if ((u.outputTokens ?? 0) >= (st.lastOutputTokens ?? 0)) {
+      st.tokensOut += outDelta;
+ st.lastOutputTokens = u.outputTokens;
+    } else {
+      // New API call started: output counter reset.
+      st.tokensOut += u.outputTokens ?? 0;
+      st.lastOutputTokens = u.outputTokens;
+    }
+    st.tokensIn = u.inputTokens ?? st.tokensIn;
+    st.cacheRead = Math.max(st.cacheRead, u.cachedInputTokens ?? 0);
+    st.cacheCreate += u.cacheCreationInputTokens ?? 0;
+    st.lastUsageAt = Date.now();
+    const elapsed = Math.max(1, (st.lastUsageAt - st.startedAt) / 1000);
+    st.tpsAvg = Math.round(st.tokensOut / elapsed);
+    entry.stats = st;
+    this.schedulePersist();
+  }
+
+  /** f0.2+: count one user/agent message into session stats. */
+  recordMessage(chatId: string, who: "user" | "agent"): void {
+    const entry = this.data[chatId];
+    if (!entry) return;
+    const st: SessionStats = entry.stats ?? {
+      startedAt: Date.now(),
+      tokensIn: 0,
+      tokensOut: 0,
+      cacheRead: 0,
+      cacheCreate: 0,
+      userMessages: 0,
+      agentMessages: 0,
+    };
+    if (who === "user") st.userMessages += 1;
+    else st.agentMessages += 1;
+    entry.stats = st;
     this.schedulePersist();
   }
 

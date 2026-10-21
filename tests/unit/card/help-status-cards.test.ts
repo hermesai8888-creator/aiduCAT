@@ -42,10 +42,11 @@ describe('statusCard (猴哥点单: 只读, 无底部按钮)', () => {
     chatMode: 'p2p',
   };
 
-  it('renders the status lines but no buttons', () => {
+  it('renders the 4-line status card, no buttons', () => {
     const json = JSON.stringify(statusCard(info));
-    expect(json).toContain('📊 当前状态');
-    expect(json).toContain('profile');
+    expect(json).toContain('\ud83d\udcca \u5f53\u524d\u72b6\u6001');
+    expect(json).toContain('\ud83d\udea9 claude');
+    expect(json).toContain('\ud83c\udff7\ufe0f');
     expect(json).not.toContain('"tag":"button"');
     expect(json).not.toContain('"tag":"action"');
   });

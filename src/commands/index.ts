@@ -864,6 +864,26 @@ async function handleStatus(_args: string, ctx: CommandContext): Promise<void> {
     ownerState: formatOwnerState(ctx),
     scope: ctx.scope,
     chatMode: ctx.chatMode,
+    sessionStats: sess?.stats,
+    modelLine: (() => {
+      // f0.2+ /status: mirror the panel's context readout. The latest run's
+      // state rides on the card renderer options normally; here we read the
+      // stored usage snapshot from the session store (recordUsage keeps the
+      // newest per-call totals) and the compaction window from settings env.
+      const st = sess?.stats;
+      const ctxUsed = st ? st.tokensIn : undefined;
+      const compactRaw = process.env.CLAUDE_CODE_AUTO_COMPACT_WINDOW;
+      const ctxTotal = compactRaw ? Number(compactRaw) : 1_000_000;
+      const compactPct = ctxUsed !== undefined && ctxTotal ? Math.round((ctxUsed / ctxTotal) * 100) : undefined;
+      const isCodex2 = ctx.controls.profileConfig.agentKind === "codex";
+      return {
+        model: isCodex2 ? undefined : (ctx.controls.cfg.preferences?.model || undefined),
+        effort: (ctx.controls.cfg.preferences?.effort as string | undefined)?.replace(/^./, (c) => c.toUpperCase()),
+        ctxUsed,
+        ctxTotal,
+        compactPct,
+      };
+    })(),
   });
   await ctx.channel.send(ctx.msg.chatId, { card }, commandReplyOptions(ctx));
 }

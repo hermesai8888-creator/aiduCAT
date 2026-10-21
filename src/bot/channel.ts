@@ -298,6 +298,8 @@ export async function startChannel(deps: StartChannelDeps): Promise<BridgeChanne
   const pending = new PendingQueue(DEBOUNCE_MS, (scope, batch) => {
     const firstMsg = batch[0];
     if (!firstMsg) return;
+    // f0.2+ /status: count every incoming user message batch as one user turn.
+    sessions.recordMessage(scope, 'user');
     pending.block(scope);
     void withTrace({ chatId: firstMsg.chatId }, async () => {
       log.info('flush', 'start', {
@@ -1155,6 +1157,7 @@ async function runAgentBatch(deps: RunBatchDeps): Promise<void> {
           idleTimeoutMs,
           recordSession,
           async () => {},
+          sessions,
         );
         await cotDone;
         if (cotPublisher.degradedReason) {
@@ -1229,6 +1232,7 @@ async function runAgentBatch(deps: RunBatchDeps): Promise<void> {
             await cardCtrl.update(renderCard(filterForPrefs(state), cardRenderOptions));
           }
         },
+        sessions,
         // (diagnostics)
       );
       try {
@@ -1309,6 +1313,7 @@ async function runAgentBatch(deps: RunBatchDeps): Promise<void> {
             await markdownCtrl.setContent(renderText(filterForPrefs(state)));
           }
         },
+        sessions,
       );
       try {
         await awaitRenderAwareStream({
@@ -1351,6 +1356,7 @@ async function runAgentBatch(deps: RunBatchDeps): Promise<void> {
         idleTimeoutMs,
         recordSession,
         async () => {},
+        sessions,
       );
       await sendFinalReply({
         channel,
@@ -1637,6 +1643,8 @@ async function processAgentStream(
   idleTimeoutMs: number | undefined,
   recordSession: (event: AgentEvent) => void,
   flush: (state: RunState) => Promise<void>,
+  stats: { recordUsage: (chatId: string, u: { inputTokens?: number; outputTokens?: number; cachedInputTokens?: number; cacheCreationInputTokens?: number }) => void;
+           recordMessage: (chatId: string, who: "user" | "agent") => void },
 ): Promise<RunState> {
   const runStart = Date.now();
   let state: RunState = initialState;
@@ -1697,7 +1705,22 @@ async function processAgentStream(
         recordSession(evt);
         continue;
       }
+      // f0.2+ /status: count the agent's answer as one assistant message.
+      if (evt.type === 'final_text' && evt.content?.trim()) {
+        stats.recordMessage(scope, 'agent');
+      }
       if (evt.type === 'usage') {
+        // f0.2+ /status: session-lifetime counters (/new resets). Per-call
+        // snapshots only — the terminal result event's cumulative total would
+        // double-count every tool round.
+        if (!evt.cumulative) {
+          stats.recordUsage(scope, {
+            inputTokens: evt.inputTokens,
+            outputTokens: evt.outputTokens,
+            cachedInputTokens: evt.cachedInputTokens,
+            cacheCreationInputTokens: evt.cacheCreationInputTokens,
+          });
+        }
         const { costUsd, inputTokens, outputTokens } = evt;
         if (costUsd !== undefined || inputTokens !== undefined || outputTokens !== undefined) {
           log.info('agent', 'usage', {

@@ -82,47 +82,80 @@ export interface StatusInfo {
   scope: string;
   /** Chat mode — used to label scope. */
   chatMode: 'p2p' | 'group' | 'topic';
+  /** f0.2+ /status: session stats block (/new resets). */
+  sessionStats?: {
+    startedAt: number;
+    tokensIn: number;
+    tokensOut: number;
+    cacheRead: number;
+    cacheCreate: number;
+    userMessages: number;
+    agentMessages: number;
+    tpsAvg?: number;
+  };
+  /** f0.2+ /status: current model/effort/ctx readout. */
+  modelLine?: {
+    model?: string;
+    effort?: string;
+    ctxUsed?: number;
+    ctxTotal?: number;
+    compactPct?: number;
+  };
 }
 
 export function statusCard(info: StatusInfo): object {
   const sessionLine = info.sessionId
     ? `\`${info.sessionId.slice(0, 8)}…\`${info.sessionStale ? ' ⚠️ 旧 cwd，下一条会新建' : ''}`
     : (info.emptySessionText ?? '(无)');
-  // For topic groups, surface that the scope is per-topic so the user
-  // knows /cd / /new only affect this topic.
-  const scopeLine =
-    info.chatMode === 'topic'
-      ? `\`${escapeCode(info.scope)}\` _（话题独立 session）_`
-      : `\`${escapeCode(info.scope)}\``;
-  const cwdLine = info.cwd ? `\`${escapeCode(info.cwd)}\`` : '(未设置)';
+  const st = info.sessionStats;
+  const fmtTok = (n: number) => {
+    const t = (x: number) => x.toFixed(1).replace(/\.0$/, '');
+    if (n >= 1_000_000) return `${t(n / 1_000_000)}M`;
+    if (n >= 1_000) return `${t(n / 1_000)}k`;
+    return String(n);
+  };
+  const ml = info.modelLine;
+  const modelBits = [
+    ml?.model,
+    ml?.effort,
+    ml?.compactPct !== undefined ? `🗜️ ${ml.compactPct}%` : undefined,
+  ].filter(Boolean) as string[];
+  const dur = st ? Date.now() - st.startedAt : 0;
+  const durMin = Math.floor(dur / 60_000);
+  const durTxt = durMin >= 60 ? `${Math.floor(durMin / 60)}h${durMin % 60}m` : `${durMin}m`;
+  const startedTxt = st ? new Date(st.startedAt).toISOString().slice(0, 16).replace('T', ' ') : '';
+  const cacheTotal = st ? st.cacheRead + st.cacheCreate : 0;
+  const cacheHitPct = cacheTotal > 0 ? Math.round(((st?.cacheRead ?? 0) / cacheTotal) * 100) : 0;
+  const ctxBits =
+    ml?.ctxUsed !== undefined && ml?.ctxTotal
+      ? `${fmtTok(ml.ctxUsed)}/${fmtTok(ml.ctxTotal)} (${Math.round((ml.ctxUsed / ml.ctxTotal) * 100)}%)`
+      : undefined;
+  const tokenBits = st
+    ? `📥 ${fmtTok(st.tokensIn)} · 📤 ${fmtTok(st.tokensOut)} · 🎯 ${cacheHitPct}% · ⚡ ${st.tpsAvg ?? 0} tok/s`
+    : undefined;
+  const lines = [
+    `🏷️ **Session**: ${sessionLine}`,
+    `🤖 ${escapeMd(info.agentName)}${modelBits.length ? ` · ${modelBits.join(' · ')}` : ''}`,
+    st
+      ? `🚩 ${startedTxt} · ⏱️ ${durTxt} · 💬 User ${st.userMessages} / Agent ${st.agentMessages}`
+      : `🚩 ${escapeMd(info.profileName)} · 📁 ${info.cwd ? `\`${escapeCode(info.cwd)}\`` : '(未设置)'}`,
+    ctxBits || tokenBits
+      ? `⏳ ${ctxBits ?? ''}${tokenBits ? `${ctxBits ? ' · ' : ''}${tokenBits}` : ''}`.trim()
+      : undefined,
+  ].filter(Boolean) as string[];
+  // Ops tail (dim, single line): original field set kept for troubleshooting.
   const queueLine = info.queue
     ? `${info.queue.active}/${info.queue.cap} active, ${info.queue.waiting} waiting`
     : 'unknown';
-  const lines = [
-    `🧭 **scope**: ${scopeLine}`,
-    `🧩 **profile**: ${escapeMd(info.profileName)}`,
-    `📁 **cwd**: ${cwdLine}`,
-    `🔗 **session**: ${sessionLine}`,
-    `🤖 **agent**: ${escapeMd(info.agentName)}`,
-    `🛡 **${escapeMd(info.runtimeAccess.label)}**: ${escapeMd(info.runtimeAccess.value)}`,
-    ...(info.larkCliStatus ? [`🔐 **lark-cli**: ${info.larkCliStatus}`] : []),
-    `🏃 **active run**: ${info.activeRun ? 'yes' : 'no'}`,
-    ...(info.activeScopes && info.activeScopes.length > 0
-      ? [
-          `🏃 **active scopes**: ${info.activeScopes.map((scope) => `\`${escapeCode(scope)}\``).join(', ')}`,
-        ]
-      : []),
-    ...(info.activeCommentScopes && info.activeCommentScopes.length > 0
-      ? [
-          `📝 **comment runs**: ${info.activeCommentScopes.map((scope) => `\`${escapeCode(scope)}\``).join(', ')}`,
-        ]
-      : []),
-    `🚦 **queue**: ${queueLine}`,
-    `👤 **owner API**: ${escapeMd(info.ownerState)}`,
-  ];
-  return shell('📊 当前状态', [
-    divMd(lines.join('\n')),
-  ]);
+  const tail = [
+    `📁 ${info.cwd ? `\`${escapeCode(info.cwd)}\`` : '(未设置)'}`,
+    info.sessionStale ? '⚠️ 旧cwd' : undefined,
+    `🛡 ${escapeMd(info.runtimeAccess.label)}: ${escapeMd(info.runtimeAccess.value)}`,
+    info.larkCliStatus ? `🔐 ${info.larkCliStatus}` : undefined,
+    `🚦 ${queueLine}`,
+    `👤 ${escapeMd(info.ownerState)}`,
+  ].filter(Boolean).join(' · ');
+  return shell('📊 当前状态', [divMd(lines.join('\n')), HR, divMd(`_: ${tail}_`)]);
 }
 
 export interface ResumeEntry {
