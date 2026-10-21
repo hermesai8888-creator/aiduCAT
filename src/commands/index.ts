@@ -876,7 +876,6 @@ async function handleStatus(_args: string, ctx: CommandContext): Promise<void> {
       // 🗜️ = 压缩窗占模型声明窗口的百分比（60% 设定）。数据源与 spawn 时写
       // 进 CLAUDE_CODE_AUTO_COMPACT_WINDOW 的同一来源（modelWindow×60%），
       // 卡面与 CC 实际行为严格一致（2026-10-21 统一）。
-      const modelWindow = (sess)?.stats ? undefined : undefined; // placeholder, real value via sessionModelWindow map below
       const compactWindow = Number(process.env.CLAUDE_CODE_AUTO_COMPACT_WINDOW || 0);
       const ctxTotal = compactWindow ? Math.round((compactWindow * 100) / 60) : 1_000_000;
       const compactPct = compactWindow ? 60 : undefined;
@@ -886,6 +885,7 @@ async function handleStatus(_args: string, ctx: CommandContext): Promise<void> {
         effort: (ctx.controls.cfg.preferences?.effort as string | undefined)?.replace(/^./, (c) => c.toUpperCase()),
         ctxUsed,
         ctxTotal,
+        compactPct,
       };
     })(),
   });

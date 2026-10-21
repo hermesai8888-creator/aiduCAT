@@ -154,19 +154,7 @@ export function statusCard(info: StatusInfo): object {
     `🚩 ${startedTxt || '刚刚'} · ⏱️ ${durTxt} · 💬 User ${st?.userMessages ?? 0} / Agent ${st?.agentMessages ?? 0}`,
     `⏳ ${ctxBits ?? '—/— (—%)'} · 📥 ${st ? fmtTok(st.tokensIn) : '0'} · 📤 ${st ? fmtTok(st.tokensOut) : '0'} · 🎯 ${st && cacheTotal > 0 ? cacheHitPct : 0}% · ⚡ ${st?.tpsAvg ?? 0} tok/s`,
   ].filter(Boolean) as string[];
-  // Ops tail (dim, single line): original field set kept for troubleshooting.
-  const queueLine = info.queue
-    ? `${info.queue.active}/${info.queue.cap} active, ${info.queue.waiting} waiting`
-    : 'unknown';
-  const tail = [
-    `📁 ${info.cwd ? `\`${escapeCode(info.cwd)}\`` : '(未设置)'}`,
-    info.sessionStale ? '⚠️ 旧cwd' : undefined,
-    `🛡 ${escapeMd(info.runtimeAccess.label)}: ${escapeMd(info.runtimeAccess.value)}`,
-    info.larkCliStatus ? `🔐 ${info.larkCliStatus}` : undefined,
-    `🚦 ${queueLine}`,
-    `👤 ${escapeMd(info.ownerState)}`,
-  ].filter(Boolean).join(' · ');
-  return shell('📊 当前状态', [divMd(lines.join('\n')), HR, divMd(`_: ${tail}_`)]);
+return shell('📊 当前状态', [divMd(lines.join('\n'))]);
 }
 
 export interface ResumeEntry {
