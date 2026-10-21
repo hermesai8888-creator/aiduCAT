@@ -99,13 +99,13 @@ export interface StatusInfo {
     effort?: string;
     ctxUsed?: number;
     ctxTotal?: number;
-    compactPct?: number;
+    compactTotal?: number;
   };
 }
 
 export function statusCard(info: StatusInfo): object {
   const sessionLine = info.sessionId
-    ? `\`${info.sessionId.slice(0, 8)}…\`${info.sessionStale ? ' ⚠️ 旧 cwd，下一条会新建' : ''}`
+    ? `\`${info.sessionId}\`${info.sessionStale ? ' ⚠️ 旧 cwd，下一条会新建' : ''}`
     : (info.emptySessionText ?? '(无)');
   const st = info.sessionStats;
   const fmtTok = (n: number) => {
@@ -115,10 +115,14 @@ export function statusCard(info: StatusInfo): object {
     return String(n);
   };
   const ml = info.modelLine;
+  // 🗜️ shows the COMPACT THRESHOLD setting (CLAUDE_CODE_AUTO_COMPACT_WINDOW),
+  // not a live ratio — line 4 already carries the live ctx percentage. 猴哥:
+  // the two lines answer different questions ("it compacts at X" vs "we are
+  // at Y now").
   const modelBits = [
     ml?.model,
     ml?.effort,
-    ml?.compactPct !== undefined ? `🗜️ ${ml.compactPct}%` : undefined,
+    ml?.compactTotal ? `🗜️ ${fmtTok(ml.compactTotal)}` : undefined,
   ].filter(Boolean) as string[];
   const dur = st ? Date.now() - st.startedAt : 0;
   const durMin = Math.floor(dur / 60_000);
