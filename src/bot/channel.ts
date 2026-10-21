@@ -1000,6 +1000,8 @@ async function runAgentBatch(deps: RunBatchDeps): Promise<void> {
       : claudeCapability(controls.profileConfig);
   const flow = await startRunFlow({
     scopeId: scope,
+    // f0.2+: the selected model's declared window drives the 60% compact env.
+    modelWindow: await contextWindowForModel(modelSelection),
     scope: scopeContext,
     prompt,
     attachments: attachments.map(toPolicyAttachment),

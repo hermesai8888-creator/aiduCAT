@@ -41,6 +41,10 @@ export interface StartRunFlowInput {
     source: string;
     stage: string;
   };
+  /** f0.2+: declared context window of the selected model (from the 10router
+   * combo catalog). Drives the 60% auto-compact env; optional — the per-run
+   * env just falls back to the service default when absent. */
+  modelWindow?: number;
 }
 
 export type RunFlowRejectCode =
@@ -155,11 +159,25 @@ export async function startRunFlow(input: StartRunFlowInput): Promise<StartRunFl
       // Must land on `envOverrides` — spreading the map at the top level
       // turned ANTHROPIC_BASE_URL etc. into stray SubmitRunInput keys that
       // nothing read, so --model switched but the endpoint did not.
-      envOverrides: await runProviderEnvOverrides(
-        input.profileConfig.modelProviders,
-        input.profileConfig.preferences.provider,
-        input.capability.agentId,
-      ),
+      envOverrides: await (async () => {
+        // f0.2+ 猴哥点单 (2026-10-21): auto-compact follows the MODEL's
+        // declared window at a fixed 60% — never a hard-coded token count.
+        // A 1M combo compacts at 600k, a 500k model at 300k, so an undersized
+        // gateway model can never overflow before compaction fires.
+        const base = (await runProviderEnvOverrides(
+          input.profileConfig.modelProviders,
+          input.profileConfig.preferences.provider,
+          input.capability.agentId,
+        )) ?? {};
+        const win = input.modelWindow;
+        const pct = Number(process.env.AIDUCAT_COMPACT_PCT ?? 60);
+        if (win && pct > 0 && pct <= 100) {
+          base.CLAUDE_CODE_AUTO_COMPACT_WINDOW = String(
+            Math.round((win * pct) / 100),
+          );
+        }
+        return base;
+      })(),
       // aiduCAT: forward the stored reasoning effort (claude forwards as --effort,
       // codex forwards as -c model_reasoning_effort="..."). If claude is set to
       // 'ultra' (supported on codex), automatically coerce to 'max' to avoid CLI warnings.
