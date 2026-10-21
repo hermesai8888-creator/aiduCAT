@@ -117,18 +117,12 @@ export function statusCard(info: StatusInfo): object {
     return String(n);
   };
   const ml = info.modelLine;
-  // 🗜️ shows the COMPACT THRESHOLD setting (CLAUDE_CODE_AUTO_COMPACT_WINDOW),
-  // not a live ratio — line 4 already carries the live ctx percentage. 猴哥:
-  // the two lines answer different questions ("it compacts at X" vs "we are
-  // at Y now").
   const modelBits = [
     ml?.model,
     ml?.effort,
-    // 🗜️ = auto-compact trigger as a % of the usable window (600k/900k = 67%)
+    // 🗜️ = auto-compact trigger as a % of the model window (setting display)
     ml?.compactPct !== undefined ? `🗜️ ${ml.compactPct}%` : undefined,
   ].filter(Boolean) as string[];
-  // 旧会话（本轮 stats 上线前创建的）没有 stats.startedAt — 用 entry.updatedAt
-  // 近似会话起点，保证第三行始终完整；stats 从本次 /status 观察后开始累计。
   const startedAtMs = st?.startedAt ?? info.sessionUpdatedAt;
   const dur = startedAtMs ? Date.now() - startedAtMs : 0;
   const durMin = Math.floor(dur / 60_000);
@@ -138,23 +132,35 @@ export function statusCard(info: StatusInfo): object {
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', hour12: false,
       })
-    : '';
+    : '刚刚';
   const cacheTotal = st ? st.cacheRead + st.cacheCreate : 0;
   const cacheHitPct = cacheTotal > 0 ? Math.round(((st?.cacheRead ?? 0) / cacheTotal) * 100) : 0;
   const ctxBits =
     ml?.ctxUsed !== undefined && ml?.ctxTotal
       ? `${fmtTok(ml.ctxUsed)}/${fmtTok(ml.ctxTotal)} (${Math.round((ml.ctxUsed / ml.ctxTotal) * 100)}%)`
-      : undefined;
-  const tokenBits = st
-    ? `📥 ${fmtTok(st.tokensIn)} · 📤 ${fmtTok(st.tokensOut)} · 🎯 ${cacheHitPct}% · ⚡ ${st.tpsAvg ?? 0} tok/s`
-    : undefined;
+      : '—/— (—%)';
+  const tokenBits = `📥 ${st ? fmtTok(st.tokensIn) : 0} · 📤 ${st ? fmtTok(st.tokensOut) : 0} · 🎯 ${cacheHitPct}% · ⚡ ${st?.tpsAvg ?? 0} tok/s`;
+  // f0.2+ 猴哥终版 (2026-10-21): six lines — runtime/identity middle rows come
+  // back (they were missed after the cleanup pass), placed between the model
+  // line and the stats lines.
+  const runtimeBits = [
+    `🛡 ${escapeMd(info.runtimeAccess.value)}`,
+    `👤 ${escapeMd(info.ownerState)}`,
+  ].join(' · ');
+  const queueLine = info.queue
+    ? `🚦 ${info.queue.active}/${info.queue.cap} active, ${info.queue.waiting} waiting`
+    : '🚦 0/0 active, 0 waiting';
+  const larkBit = info.larkCliStatus ? `🔐 ${info.larkCliStatus}` : '🔐 0';
+  const runBit = info.activeRun ? '🏃 1' : '🏃 0';
   const lines = [
     `🏷️ **Session**: ${sessionLine}`,
     `🤖 ${escapeMd(info.agentName)}${modelBits.length ? ` · ${modelBits.join(' · ')}` : ''}`,
-    `🚩 ${startedTxt || '刚刚'} · ⏱️ ${durTxt} · 💬 User ${st?.userMessages ?? 0} / Agent ${st?.agentMessages ?? 0}`,
-    `⏳ ${ctxBits ?? '—/— (—%)'} · 📥 ${st ? fmtTok(st.tokensIn) : '0'} · 📤 ${st ? fmtTok(st.tokensOut) : '0'} · 🎯 ${st && cacheTotal > 0 ? cacheHitPct : 0}% · ⚡ ${st?.tpsAvg ?? 0} tok/s`,
-  ].filter(Boolean) as string[];
-return shell('📊 当前状态', [divMd(lines.join('\n'))]);
+    runtimeBits,
+    `${larkBit} · ${runBit} · ${queueLine}`,
+    `🚩 ${startedTxt} · ⏱️ ${durTxt} · 💬 User ${st?.userMessages ?? 0} / Agent ${st?.agentMessages ?? 0}`,
+    `⏳ ${ctxBits} · ${tokenBits}`,
+  ];
+  return shell('📊 当前状态', [divMd(lines.join('\n'))]);
 }
 
 export interface ResumeEntry {
