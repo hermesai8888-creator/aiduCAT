@@ -108,7 +108,7 @@ export interface StatusInfo {
 export function statusCard(info: StatusInfo): object {
   const sessionLine = info.sessionId
     ? `\`${info.sessionId}\`${info.sessionStale ? ' ⚠️ 旧 cwd，下一条会新建' : ''}`
-    : (info.emptySessionText ?? '(无)');
+    : (info.emptySessionText ?? '`(待首跑创建)`');
   const st = info.sessionStats;
   const fmtTok = (n: number) => {
     const t = (x: number) => x.toFixed(1).replace(/\.0$/, '');
@@ -151,12 +151,8 @@ export function statusCard(info: StatusInfo): object {
   const lines = [
     `🏷️ **Session**: ${sessionLine}`,
     `🤖 ${escapeMd(info.agentName)}${modelBits.length ? ` · ${modelBits.join(' · ')}` : ''}`,
-    st
-      ? `🚩 ${startedTxt} · ⏱️ ${durTxt} · 💬 User ${st.userMessages} / Agent ${st.agentMessages}`
-      : `🚩 ${startedTxt ? `${startedTxt} · ` : ''}${escapeMd(info.profileName)} profile（统计自下条消息起累计）`,
-    ctxBits || tokenBits
-      ? `⏳ ${ctxBits ?? ''}${tokenBits ? `${ctxBits ? ' · ' : ''}${tokenBits}` : ''}`.trim()
-      : undefined,
+    `🚩 ${startedTxt || '刚刚'} · ⏱️ ${durTxt} · 💬 User ${st?.userMessages ?? 0} / Agent ${st?.agentMessages ?? 0}`,
+    `⏳ ${ctxBits ?? '—/— (—%)'} · 📥 ${st ? fmtTok(st.tokensIn) : '0'} · 📤 ${st ? fmtTok(st.tokensOut) : '0'} · 🎯 ${st && cacheTotal > 0 ? cacheHitPct : 0}% · ⚡ ${st?.tpsAvg ?? 0} tok/s`,
   ].filter(Boolean) as string[];
   // Ops tail (dim, single line): original field set kept for troubleshooting.
   const queueLine = info.queue

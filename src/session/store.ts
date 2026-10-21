@@ -109,6 +109,18 @@ export class SessionStore {
     this.schedulePersist();
   }
 
+  #freshStats() {
+    return {
+      startedAt: Date.now(),
+      tokensIn: 0,
+      tokensOut: 0,
+      cacheRead: 0,
+      cacheCreate: 0,
+      userMessages: 0,
+      agentMessages: 0,
+    };
+  }
+
   /** f0.2+: accumulate one usage snapshot into the session's stats. */
   recordUsage(
     chatId: string,
@@ -171,15 +183,23 @@ export class SessionStore {
 
   clear(chatId: string): void {
     const prev = this.data[chatId];
-    if (!prev) return;
-    if (prev.idleTimeoutMinutes !== undefined) {
-      this.data[chatId] = {
-        idleTimeoutMinutes: prev.idleTimeoutMinutes,
-        updatedAt: Date.now(),
-      };
-    } else {
-      delete this.data[chatId];
+    if (!prev) {
+      // /new on a brand-new scope: still lay down a stats skeleton so the
+      // /status card has a session start to show (2026-10-21 猴哥点单).
+      this.data[chatId] = { updatedAt: Date.now(), stats: this.#freshStats() };
+      this.schedulePersist();
+      return;
     }
+    // Keep the entry alive with a fresh stats skeleton: updatedAt becomes the
+    // new session start; idleTimeout preference survives; old counters go.
+    this.data[chatId] = {
+      updatedAt: Date.now(),
+      stats: this.#freshStats(),
+      ...(prev.idleTimeoutMinutes !== undefined
+        ? { idleTimeoutMinutes: prev.idleTimeoutMinutes }
+        : {}),
+    };
+    this.schedulePersist();
     this.schedulePersist();
   }
 

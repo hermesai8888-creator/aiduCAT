@@ -45,8 +45,12 @@ describe('statusCard (猴哥点单: 只读, 无底部按钮)', () => {
   it('renders the 4-line status card, no buttons', () => {
     const json = JSON.stringify(statusCard(info));
     expect(json).toContain('\ud83d\udcca \u5f53\u524d\u72b6\u6001');
-    expect(json).toContain('\ud83d\udea9 claude');
-    expect(json).toContain('\ud83c\udff7\ufe0f');
+    // f0.2+ placeholder mode: all four lines always render with 0/\u2014 fillers
+    expect(json).toContain('\ud83d\udea9');            // \ud83d\udea9 line present
+    expect(json).toContain('User 0 / Agent 0');
+    expect(json).toContain('\u26a1 0 tok/s');
+    expect(json).toContain('\u23f3 \u2014/\u2014');      // ctx placeholder
+    expect(json).toContain('\u5f85\u9996\u8dd1\u521b\u5efa');  // session placeholder
     expect(json).not.toContain('"tag":"button"');
     expect(json).not.toContain('"tag":"action"');
   });
