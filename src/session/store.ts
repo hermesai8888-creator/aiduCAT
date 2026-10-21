@@ -16,7 +16,12 @@ export interface SessionStats {
   cacheCreate: number;
   userMessages: number;
   agentMessages: number;
-  /** Output tokens / wall-clock seconds across the session (avg tps). */
+  /** Agent ACTIVE milliseconds (sum of run segments; idle gaps excluded —
+   * 猴哥点单 2026-10-21: TPS denominator is execution time, not wall clock). */
+  activeMs: number;
+  /** Last usage arrival — used to close the active segment lazily. */
+  activeFrom?: number;
+  /** Output tokens / active seconds (avg tps over execution time). */
   tpsAvg?: number;
 }
 
@@ -118,6 +123,7 @@ export class SessionStore {
       cacheCreate: 0,
       userMessages: 0,
       agentMessages: 0,
+      activeMs: 0,
     };
   }
 
@@ -128,36 +134,29 @@ export class SessionStore {
   ): void {
     const entry = this.data[chatId];
     if (!entry) return;
-    const st: SessionStats = entry.stats ?? {
-      startedAt: Date.now(),
-      tokensIn: 0,
-      tokensOut: 0,
-      cacheRead: 0,
-      cacheCreate: 0,
-      userMessages: 0,
-      agentMessages: 0,
-    };
+    const now = Date.now();
+    const st: SessionStats = entry.stats ?? this.#freshStats();
+    // ── active-time accounting (猴哥点单 2026-10-21) ──
+    // TPS denominator = agent execution time only. Each usage snapshot closes
+    // the previous active segment (lastUsageAt → now) and reopens one; the
+    // idle gap in between simply never gets counted.
+    const segFrom = st.activeFrom ?? st.lastUsageAt;
+    if (segFrom) st.activeMs += Math.max(0, now - segFrom);
+    st.activeFrom = now;
+    // ── token accumulation ──
     // Usage snapshots are per-API-call totals (not deltas) for the context
-    // meter, but for lifetime accumulation a plain max() is wrong across
-    // multi-turn (each turn reloads the prefix). Deltas are also unreliable
-    // (cache hits collapse the numbers). Sum *output* deltas (a true counter —
-    // each call generates fresh tokens) and keep latest *input* totals (the
-    // context meter reads them directly).
+    // meter, but lifetime accumulation needs output DELTAS (a true counter —
+    // each call generates fresh tokens); input totals stay "latest" because
+    // the context meter reads them directly.
     const outDelta = Math.max(0, (u.outputTokens ?? 0) - (st.lastOutputTokens ?? 0));
-    if ((u.outputTokens ?? 0) >= (st.lastOutputTokens ?? 0)) {
-      st.tokensOut += outDelta;
- st.lastOutputTokens = u.outputTokens;
-    } else {
-      // New API call started: output counter reset.
-      st.tokensOut += u.outputTokens ?? 0;
-      st.lastOutputTokens = u.outputTokens;
-    }
+    st.tokensOut += outDelta;
+    st.lastOutputTokens = u.outputTokens;
     st.tokensIn = u.inputTokens ?? st.tokensIn;
     st.cacheRead = Math.max(st.cacheRead, u.cachedInputTokens ?? 0);
     st.cacheCreate += u.cacheCreationInputTokens ?? 0;
-    st.lastUsageAt = Date.now();
-    const elapsed = Math.max(1, (st.lastUsageAt - st.startedAt) / 1000);
-    st.tpsAvg = Math.round(st.tokensOut / elapsed);
+    st.lastUsageAt = now;
+    const activeSec = Math.max(1, st.activeMs / 1000);
+    st.tpsAvg = Math.round(st.tokensOut / activeSec);
     entry.stats = st;
     this.schedulePersist();
   }
@@ -166,17 +165,22 @@ export class SessionStore {
   recordMessage(chatId: string, who: "user" | "agent"): void {
     const entry = this.data[chatId];
     if (!entry) return;
-    const st: SessionStats = entry.stats ?? {
-      startedAt: Date.now(),
-      tokensIn: 0,
-      tokensOut: 0,
-      cacheRead: 0,
-      cacheCreate: 0,
-      userMessages: 0,
-      agentMessages: 0,
-    };
-    if (who === "user") st.userMessages += 1;
-    else st.agentMessages += 1;
+    const st: SessionStats = entry.stats ?? this.#freshStats();
+    if (who === "user") {
+      // A user message STARTS an active segment (agent begins working).
+      if (!st.activeFrom) st.activeFrom = Date.now();
+      st.userMessages += 1;
+    } else {
+      // A final answer ENDS it — close the segment so idle-after-answer
+      // doesn't leak into the denominator on a later lazy close.
+      const segFrom = st.activeFrom ?? st.lastUsageAt;
+      if (segFrom) st.activeMs += Math.max(0, Date.now() - segFrom);
+      st.activeFrom = undefined;
+      st.agentMessages += 1;
+    }
+    // tpsAvg refresh on message boundaries too (activeMs may have grown)
+    const activeSec2 = Math.max(1, st.activeMs / 1000);
+    st.tpsAvg = st.tokensOut > 0 ? Math.round(st.tokensOut / activeSec2) : st.tpsAvg;
     entry.stats = st;
     this.schedulePersist();
   }
