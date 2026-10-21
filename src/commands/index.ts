@@ -874,9 +874,10 @@ async function handleStatus(_args: string, ctx: CommandContext): Promise<void> {
       const ctxUsed = st ? st.tokensIn : undefined;
       const compactRaw = process.env.CLAUDE_CODE_AUTO_COMPACT_WINDOW;
       const ctxTotal = compactRaw ? Number(compactRaw) : 1_000_000;
-      // 🗜️ = compact threshold ÷ usable window (MAX_CONTEXT 900k, not the 1M physical).
-      const maxCtx = Number(process.env.CLAUDE_CODE_MAX_CONTEXT_TOKENS || 900000);
-      const compactPct = compactRaw && maxCtx ? Math.round((Number(compactRaw) / maxCtx) * 100) : undefined;
+      // 🗜️ = 设定值显示区：compact threshold ÷ 物理窗口（1M）= 设定的百分比。
+      // 系统里 AUTO_COMPACT 是多少就显示多少，基准固定 1M（猴哥 2026-10-21）。
+      const physWindow = Number(process.env.CLAUDE_CODE_MAX_CONTEXT_TOKENS || 1_000_000) >= 900_000 ? 1_000_000 : 1_000_000;
+      const compactPct = compactRaw && physWindow ? Math.round((Number(compactRaw) / physWindow) * 100) : undefined;
       const isCodex2 = ctx.controls.profileConfig.agentKind === "codex";
       return {
         model: isCodex2 ? undefined : (ctx.controls.cfg.preferences?.model || undefined),
