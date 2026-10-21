@@ -99,7 +99,7 @@ export interface StatusInfo {
     effort?: string;
     ctxUsed?: number;
     ctxTotal?: number;
-    compactTotal?: number;
+    compactPct?: number;
   };
 }
 
@@ -122,7 +122,8 @@ export function statusCard(info: StatusInfo): object {
   const modelBits = [
     ml?.model,
     ml?.effort,
-    ml?.compactTotal ? `🗜️ ${fmtTok(ml.compactTotal)}` : undefined,
+    // 🗜️ = auto-compact trigger as a % of the usable window (600k/900k = 67%)
+    ml?.compactPct !== undefined ? `🗜️ ${ml.compactPct}%` : undefined,
   ].filter(Boolean) as string[];
   const dur = st ? Date.now() - st.startedAt : 0;
   const durMin = Math.floor(dur / 60_000);

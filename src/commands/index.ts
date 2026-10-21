@@ -874,13 +874,15 @@ async function handleStatus(_args: string, ctx: CommandContext): Promise<void> {
       const ctxUsed = st ? st.tokensIn : undefined;
       const compactRaw = process.env.CLAUDE_CODE_AUTO_COMPACT_WINDOW;
       const ctxTotal = compactRaw ? Number(compactRaw) : 1_000_000;
+      // 🗜️ = compact threshold ÷ usable window (MAX_CONTEXT 900k, not the 1M physical).
+      const maxCtx = Number(process.env.CLAUDE_CODE_MAX_CONTEXT_TOKENS || 900000);
+      const compactPct = compactRaw && maxCtx ? Math.round((Number(compactRaw) / maxCtx) * 100) : undefined;
       const isCodex2 = ctx.controls.profileConfig.agentKind === "codex";
       return {
         model: isCodex2 ? undefined : (ctx.controls.cfg.preferences?.model || undefined),
         effort: (ctx.controls.cfg.preferences?.effort as string | undefined)?.replace(/^./, (c) => c.toUpperCase()),
         ctxUsed,
         ctxTotal,
-        compactTotal: compactRaw ? Number(compactRaw) : undefined,
       };
     })(),
   });
