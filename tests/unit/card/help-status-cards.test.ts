@@ -49,7 +49,8 @@ describe('statusCard (猴哥点单: 只读, 无底部按钮)', () => {
     expect(json).toContain('\ud83d\udea9');            // \ud83d\udea9 line present
     expect(json).toContain('User 0 / Agent 0');
     expect(json).toContain('\u26a1 0 tok/s');
-    expect(json).toContain('\u23f3 \u2014/\u2014');      // ctx placeholder
+    expect(json).toContain('\u23f3 \u2014/\u2014 (\u2014%)');  // ctx placeholder
+    expect(json).toContain('\u23f1\ufe0f \u521a\u521a');      // duration placeholder
     expect(json).toContain('\u5f85\u9996\u8dd1\u521b\u5efa');  // session placeholder
     expect(json).not.toContain('"tag":"button"');
     expect(json).not.toContain('"tag":"action"');
