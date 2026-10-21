@@ -865,6 +865,7 @@ async function handleStatus(_args: string, ctx: CommandContext): Promise<void> {
     scope: ctx.scope,
     chatMode: ctx.chatMode,
     sessionStats: sess?.stats,
+    sessionUpdatedAt: sess?.updatedAt,
     modelLine: (() => {
       // f0.2+ /status: mirror the panel's context readout. The latest run's
       // state rides on the card renderer options normally; here we read the

@@ -93,6 +93,8 @@ export interface StatusInfo {
     agentMessages: number;
     tpsAvg?: number;
   };
+  /** f0.2+: session start fallback for entries created pre-stats. */
+  sessionUpdatedAt?: number;
   /** f0.2+ /status: current model/effort/ctx readout. */
   modelLine?: {
     model?: string;
@@ -125,10 +127,18 @@ export function statusCard(info: StatusInfo): object {
     // 🗜️ = auto-compact trigger as a % of the usable window (600k/900k = 67%)
     ml?.compactPct !== undefined ? `🗜️ ${ml.compactPct}%` : undefined,
   ].filter(Boolean) as string[];
-  const dur = st ? Date.now() - st.startedAt : 0;
+  // 旧会话（本轮 stats 上线前创建的）没有 stats.startedAt — 用 entry.updatedAt
+  // 近似会话起点，保证第三行始终完整；stats 从本次 /status 观察后开始累计。
+  const startedAtMs = st?.startedAt ?? info.sessionUpdatedAt;
+  const dur = startedAtMs ? Date.now() - startedAtMs : 0;
   const durMin = Math.floor(dur / 60_000);
-  const durTxt = durMin >= 60 ? `${Math.floor(durMin / 60)}h${durMin % 60}m` : `${durMin}m`;
-  const startedTxt = st ? new Date(st.startedAt).toISOString().slice(0, 16).replace('T', ' ') : '';
+  const durTxt = durMin >= 60 ? `${Math.floor(durMin / 60)}h${durMin % 60}m` : durMin >= 1 ? `${durMin}m` : '刚刚';
+  const startedTxt = startedAtMs
+    ? new Date(startedAtMs).toLocaleString('zh-CN', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', hour12: false,
+      })
+    : '';
   const cacheTotal = st ? st.cacheRead + st.cacheCreate : 0;
   const cacheHitPct = cacheTotal > 0 ? Math.round(((st?.cacheRead ?? 0) / cacheTotal) * 100) : 0;
   const ctxBits =
@@ -143,7 +153,7 @@ export function statusCard(info: StatusInfo): object {
     `🤖 ${escapeMd(info.agentName)}${modelBits.length ? ` · ${modelBits.join(' · ')}` : ''}`,
     st
       ? `🚩 ${startedTxt} · ⏱️ ${durTxt} · 💬 User ${st.userMessages} / Agent ${st.agentMessages}`
-      : `🚩 ${escapeMd(info.profileName)} · 📁 ${info.cwd ? `\`${escapeCode(info.cwd)}\`` : '(未设置)'}`,
+      : `🚩 ${startedTxt ? `${startedTxt} · ` : ''}${escapeMd(info.profileName)} profile（统计自下条消息起累计）`,
     ctxBits || tokenBits
       ? `⏳ ${ctxBits ?? ''}${tokenBits ? `${ctxBits ? ' · ' : ''}${tokenBits}` : ''}`.trim()
       : undefined,
