@@ -255,6 +255,9 @@ export async function startChannel(deps: StartChannelDeps): Promise<BridgeChanne
       dmMode: 'open',
       requireMention: false,
       respondToMentionAll: false,
+      // Two bridged bots in the same group can @ each other forever. Drop the
+      // 5th bot @-mention within an hour per chat; any human message resets it.
+      botLoopGuard: { enabled: true, maxBotMentions: 5, windowMs: 3_600_000, scope: 'chat', onTrip: 'drop' },
     },
     // Disable per-chat serialization so we can implement our own
     // debounce + run-chain policy (see pending-queue + runChain below).
@@ -1081,7 +1084,9 @@ async function runAgentBatch(deps: RunBatchDeps): Promise<void> {
     log.info('flush', 'idle-watchdog', { idleTimeoutMs });
   }
 
-  const replyMode = getMessageReplyMode(controls.cfg);
+  // Group replies use rich text (post) so `<at user_id>` becomes a real
+  // mention; DMs keep the configured mode.
+  const replyMode = firstMsg.chatType !== 'p2p' ? 'markdown' : getMessageReplyMode(controls.cfg);
   log.info('flush', 'reply-mode', { mode: replyMode });
   const cotMessages = getCotMessages(controls.cfg);
   const cotEnabled = cotMessages !== 'off';
