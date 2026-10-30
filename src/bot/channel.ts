@@ -80,6 +80,17 @@ async function contextWindowForModel(model: string | undefined): Promise<number 
   const windows = await fetchContextWindows(url);
   return windows.get(model);
 }
+
+/** Fallback when the router lookup has no answer (no AIDU_10ROUTER_URL, or a
+ * gateway like CLIProxyAPI whose /v1/models carries no context size): use the
+ * active provider's declared `contextWindow`, so the 60% auto-compact still
+ * applies on non-10router providers. */
+function providerContextWindow(profile: Controls['profileConfig']): number | undefined {
+  const id = profile.preferences.provider;
+  if (!id || id === 'default') return undefined;
+  const win = profile.modelProviders?.[id]?.contextWindow;
+  return typeof win === 'number' && win > 0 ? win : undefined;
+}
 import type { AppPaths } from '../config/app-paths';
 import {
   consumeCotEvents,
@@ -1004,7 +1015,8 @@ async function runAgentBatch(deps: RunBatchDeps): Promise<void> {
   const flow = await startRunFlow({
     scopeId: scope,
     // f0.2+: the selected model's declared window drives the 60% compact env.
-    modelWindow: await contextWindowForModel(modelSelection),
+    modelWindow:
+      (await contextWindowForModel(modelSelection)) ?? providerContextWindow(controls.profileConfig),
     scope: scopeContext,
     prompt,
     attachments: attachments.map(toPolicyAttachment),
